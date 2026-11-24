@@ -7,7 +7,6 @@ export function Screen({ children, style }: { children: ReactNode; style?: CSSPr
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      background: 'radial-gradient(ellipse at top, #1a2240 0%, #0a0e1a 70%)',
       paddingLeft: 'max(16px, env(safe-area-inset-left,0px))',
       paddingRight: 'max(16px, env(safe-area-inset-right,0px))',
       paddingBottom: 'max(16px, env(safe-area-inset-bottom,0px))',

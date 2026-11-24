@@ -50,7 +50,8 @@ export default function LobbyScreen() {
   }
 
   const players = Object.entries(roomData?.players ?? {});
-  const allReady = players.length >= 2 && players.every(([, p]) => (p as any).ready || (p as any).isRulemaster);
+  const isSolo = players.length === 1;
+  const allReady = players.length >= 1 && (isSolo || players.every(([, p]) => (p as any).ready || (p as any).isRulemaster));
 
   return (
     <Screen style={{ justifyContent: 'center' }}>
@@ -116,9 +117,9 @@ export default function LobbyScreen() {
           </div>
         </div>
 
-        {players.length < 2 && (
-          <div style={{ color: 'rgba(200,168,75,0.5)', fontSize: '0.8rem', textAlign: 'center', marginBottom: 12 }}>
-            รอผู้เล่นเพิ่มเติม (ต้องการ 2 คนขึ้นไป)
+        {isSolo && (
+          <div style={{ color: 'rgba(200,168,75,0.5)', fontSize: '0.8rem', textAlign: 'center', marginBottom: 12, padding: '6px 10px', background: 'rgba(200,168,75,0.06)', borderRadius: 6, border: '1px solid rgba(200,168,75,0.2)' }}>
+            🧪 Solo Test Mode — กฎจะแสดงให้เห็น
           </div>
         )}
 

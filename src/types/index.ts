@@ -42,6 +42,17 @@ export interface Player {
 
 export type GamePhase = 'lobby' | 'playing' | 'guess' | 'roundEnd' | 'gameOver';
 
+export interface PlayLogEntry {
+  cardId: string;
+  result: 'pass' | 'fail';
+  uid: string;
+}
+
+export interface StuckCheck {
+  requesterUid: string;
+  handSnapshot: string[];
+}
+
 export interface GuessPhase {
   triggeredBy: string;
   order: string[];
@@ -63,6 +74,8 @@ export interface GameState {
   discardPile: string[];
   players: Record<string, Player>;
   guessPhase: GuessPhase | null;
+  stuckCheck: StuckCheck | null;
+  playLog: PlayLogEntry[];
   round: number;
   winnerUid: string | null;
   hostUid: string;

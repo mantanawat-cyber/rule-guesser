@@ -34,9 +34,21 @@ interface Props {
 export default function CardComponent({ card, onClick, selected, size = 'md', dimmed }: Props) {
   const W = size === 'sm' ? 72 : size === 'lg' ? 108 : 90;
   const H = Math.round(W * (378 / 270));
-  const barH = Math.round(H * 0.14);
-  const fontSize = size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1.2rem';
-  const emojiSize = size === 'sm' ? '0.9rem' : size === 'lg' ? '1.2rem' : '1rem';
+  const barH = Math.round(H * 0.165);
+
+  // scale factors relative to md (90px wide)
+  const scale = W / 90;
+  const cornerNumSize  = `${scale * 0.72}rem`;
+  const cornerEmoji    = `${scale * 0.65}rem`;
+  const centerNumSize  = `${scale * 2.6}rem`;
+  const bottomThSize   = `${scale * 0.72}rem`;
+  const bottomEnSize   = `${scale * 0.52}rem`;
+  const bottomEmoji    = `${scale * 0.75}rem`;
+  const cornerPad      = Math.round(scale * 5);
+
+  const CATEGORY_EN: Record<string, string> = {
+    animal: 'ANIMAL', food: 'FOOD', nature: 'NATURE',
+  };
 
   return (
     <div
@@ -44,13 +56,13 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
       style={{
         width: W,
         height: H,
-        borderRadius: 8,
+        borderRadius: Math.round(scale * 8),
         overflow: 'hidden',
         position: 'relative',
         cursor: onClick ? 'pointer' : 'default',
         flexShrink: 0,
         boxShadow: selected
-          ? `0 0 0 3px ${COLOR_HEX[card.color]}, ${GLOW[card.color]}`
+          ? `0 0 0 ${Math.round(scale * 3)}px ${COLOR_HEX[card.color]}, ${GLOW[card.color]}`
           : GLOW[card.color],
         transform: selected ? 'translateY(-6px) scale(1.05)' : 'none',
         transition: 'transform 0.15s, box-shadow 0.15s',
@@ -61,47 +73,77 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
         userSelect: 'none',
       }}
     >
-      {/* Top bar — number */}
+      {/* Top bar */}
       <div style={{
         position: 'absolute',
         top: 0, left: 0, right: 0,
         height: barH,
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: `0 ${cornerPad}px`,
+      }}>
+        {/* left corner */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: cornerNumSize, color: '#ffd700', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1 }}>
+            {card.number}
+          </span>
+          <span style={{ fontSize: cornerEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
+        </div>
+        {/* right corner */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <span style={{ fontSize: cornerEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
+          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: cornerNumSize, color: '#ffd700', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1 }}>
+            {card.number}
+          </span>
+        </div>
+      </div>
+
+      {/* Center — large number */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
+        paddingTop: Math.round(barH * 0.3),
       }}>
         <span style={{
           fontFamily: "'Cinzel', serif",
           fontWeight: 900,
-          fontSize,
-          color: '#fff',
-          textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+          fontSize: centerNumSize,
+          color: '#ffd700',
+          WebkitTextStroke: `${Math.max(1, Math.round(scale * 1.5))}px rgba(120,60,0,0.8)`,
+          textShadow: `0 0 ${Math.round(scale * 12)}px rgba(255,180,0,0.7), 0 2px 4px rgba(0,0,0,0.9)`,
           lineHeight: 1,
         }}>
           {card.number}
         </span>
       </div>
 
-      {/* Bottom bar — category */}
+      {/* Bottom bar */}
       <div style={{
         position: 'absolute',
         bottom: 0, left: 0, right: 0,
         height: barH,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: 3,
+        justifyContent: 'space-between',
+        padding: `0 ${cornerPad}px`,
       }}>
-        <span style={{ fontSize: emojiSize }}>{card.categoryEmoji}</span>
-        <span style={{
-          fontFamily: "'Sarabun', sans-serif",
-          fontSize: size === 'sm' ? '0.55rem' : '0.65rem',
-          color: '#fff',
-          fontWeight: 600,
-          textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-        }}>
-          {card.categoryTH}
-        </span>
+        {/* left emoji */}
+        <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
+        {/* center text */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
+          <span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize, color: '#ffd700', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+            {card.categoryTH}
+          </span>
+          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 400, fontSize: bottomEnSize, color: 'rgba(255,215,0,0.7)', letterSpacing: '0.08em' }}>
+            {CATEGORY_EN[card.category]}
+          </span>
+        </div>
+        {/* right emoji */}
+        <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
       </div>
     </div>
   );

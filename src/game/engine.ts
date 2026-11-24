@@ -74,11 +74,40 @@ export function buildInitialGameState(
   ruleId: string,
 ): GameState {
   const uids = Object.keys(playerNames);
+  const deck = createDeck();
+  const HAND_SIZE = 5;
+
+  // Solo mode: 1 player gets cards + can see the rule (for testing)
+  if (uids.length === 1) {
+    const uid = uids[0];
+    return {
+      phase: 'playing',
+      ruleId,
+      ruleVisibleTo: [uid],
+      currentTurn: uid,
+      rulemasterUid: null,
+      rulemasterOrder: [uid],
+      currentRulemasterIndex: 0,
+      passedPile: [],
+      failedPile: [],
+      drawPile: deck.slice(HAND_SIZE),
+      discardPile: [],
+      players: {
+        [uid]: { name: playerNames[uid], hand: deck.slice(0, HAND_SIZE), isRulemaster: false, joinedAt: Date.now() },
+      },
+      guessPhase: null,
+      stuckCheck: null,
+      playLog: [],
+      round: 1,
+      winnerUid: null,
+      hostUid,
+      roomCode,
+    };
+  }
+
   const shuffledUids = shuffleArray(uids);
   const rulemasterUid = shuffledUids[0];
-  const deck = createDeck();
 
-  const HAND_SIZE = 5;
   const players: GameState['players'] = {};
   let deckIdx = 0;
 
@@ -110,6 +139,8 @@ export function buildInitialGameState(
     discardPile: [],
     players,
     guessPhase: null,
+    stuckCheck: null,
+    playLog: [],
     round: 1,
     winnerUid: null,
     hostUid,
