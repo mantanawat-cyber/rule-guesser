@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@700&family=Sarabun:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:        #0a0e1a;
+  --bg2:       #111827;
+  --bg3:       #1a2240;
+  --surface:   #1e2a4a;
+  --border:    rgba(180,150,60,0.3);
+  --gold:      #c8a84b;
+  --gold-dim:  rgba(200,168,75,0.6);
+  --fg:        #e8dcc0;
+  --fg-dim:    rgba(232,220,192,0.6);
+  --red:       #ef4444;
+  --blue:      #3b82f6;
+  --green:     #22c55e;
+  --yellow:    #eab308;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  min-height: 100dvh;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
