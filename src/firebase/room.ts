@@ -1,12 +1,15 @@
 import { ref, set, get, update, onValue, off, push } from 'firebase/database';
-import { signInAnonymously } from 'firebase/auth';
-import { db, auth } from './config';
+import { db } from './config';
 import type { GameState } from '../types';
 
-export async function getOrCreateUid(): Promise<string> {
-  if (auth.currentUser) return auth.currentUser.uid;
-  const cred = await signInAnonymously(auth);
-  return cred.user.uid;
+export function getOrCreateUid(): string {
+  const key = 'rg_uid';
+  let uid = localStorage.getItem(key);
+  if (!uid) {
+    uid = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    localStorage.setItem(key, uid);
+  }
+  return uid;
 }
 
 function genCode(): string {

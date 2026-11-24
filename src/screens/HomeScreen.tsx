@@ -18,7 +18,7 @@ export default function HomeScreen() {
     if (!n) { setErr('กรุณากรอกชื่อก่อน'); return; }
     setErr(''); setLoading(true);
     try {
-      const uid = await getOrCreateUid();
+      const uid = getOrCreateUid();
       const { roomId, roomCode } = await createRoom(uid, n);
       dispatch({ type: 'GO_LOBBY', roomId, roomCode, uid, name: n });
     } catch {
@@ -34,7 +34,7 @@ export default function HomeScreen() {
     if (c.length !== 4) { setErr('รหัสห้องต้องมี 4 ตัวอักษร'); return; }
     setErr(''); setLoading(true);
     try {
-      const uid = await getOrCreateUid();
+      const uid = getOrCreateUid();
       const roomId = await joinRoom(c, uid, n);
       if (!roomId) { setErr('ไม่พบห้องรหัส ' + c); setLoading(false); return; }
       dispatch({ type: 'GO_LOBBY', roomId, roomCode: c, uid, name: n });
