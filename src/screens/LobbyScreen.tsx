@@ -51,7 +51,7 @@ export default function LobbyScreen() {
 
   const players = Object.entries(roomData?.players ?? {});
   const isSolo = players.length === 1;
-  const allReady = players.length >= 1 && (isSolo || players.every(([, p]) => (p as any).ready || (p as any).isRulemaster));
+  const allReady = players.length >= 1 && (isSolo || players.every(([uid, p]) => uid === roomData?.hostUid || (p as any).ready));
 
   return (
     <Screen style={{ justifyContent: 'center' }}>
