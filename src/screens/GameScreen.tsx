@@ -29,6 +29,10 @@ function normalizeGame(raw: GameState): GameState {
         { ...p, hand: toArr((p as any).hand) },
       ])
     ),
+    stuckCheck: raw.stuckCheck ? {
+      ...raw.stuckCheck,
+      handSnapshot: toArr(raw.stuckCheck.handSnapshot as any),
+    } : null,
   };
 }
 
@@ -177,7 +181,7 @@ export default function GameScreen() {
     if (!game || !myUid) return;
     const check = game.stuckCheck;
     if (!check) return;
-    const snapshot = toArr<string>(check.handSnapshot as any);
+    const snapshot = check.handSnapshot;
     const n = snapshot.length;
     const drawCount = Math.max(0, n - 1);
     const newCards = (game.drawPile ?? []).slice(0, drawCount);
@@ -653,7 +657,7 @@ function StuckCheckPanel({
 }) {
   const check = game.stuckCheck!;
   const requesterName = game.players[check.requesterUid]?.name ?? '?';
-  const handCards = toArr<string>(check.handSnapshot as any).map(id => CARD_MAP[id]).filter(Boolean) as Card[];
+  const handCards = check.handSnapshot.map(id => CARD_MAP[id]).filter(Boolean) as Card[];
   const [mode, setMode] = useState<'choose' | 'pick'>('choose');
 
   return (
