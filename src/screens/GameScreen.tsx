@@ -33,6 +33,10 @@ function normalizeGame(raw: GameState): GameState {
       ...raw.stuckCheck,
       handSnapshot: toArr(raw.stuckCheck.handSnapshot as any),
     } : null,
+    guessPhase: raw.guessPhase ? {
+      ...raw.guessPhase,
+      order: toArr(raw.guessPhase.order as any),
+    } : null,
   };
 }
 
@@ -107,41 +111,41 @@ export default function GameScreen() {
     const card = CARD_MAP[selected];
     if (!card) return;
     const valid = checkCardValid(card, passedTopCard, rule);
-
     const newHand = myHand.filter(c => c.id !== selected).map(c => c.id);
-
     const newLog = [...(game.playLog ?? []), { cardId: selected, result: valid ? 'pass' : 'fail', uid: myUid } as const];
 
-    if (valid) {
-      const newPassed = [...(game.passedPile ?? []), selected];
-      const nextUids = getNextTurnOrder(game);
-      const nextTurn = nextUids[0] ?? null;
-      if (newHand.length === 0) {
-        const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
-        const myIdx = nonRM.indexOf(myUid);
-        const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
-        await updateGameState(roomId!, {
-          passedPile: newPassed,
-          playLog: newLog,
-          phase: 'guess',
-          guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
-          players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
-        });
+    try {
+      if (valid) {
+        const newPassed = [...(game.passedPile ?? []), selected];
+        const nextTurn = getNextTurnOrder(game)[0] ?? null;
+        if (newHand.length === 0) {
+          const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+          const myIdx = nonRM.indexOf(myUid);
+          const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
+          await updateGameState(roomId!, {
+            passedPile: newPassed,
+            playLog: newLog,
+            phase: 'guess',
+            guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
+            players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
+          });
+        } else {
+          await updateGameState(roomId!, {
+            passedPile: newPassed,
+            playLog: newLog,
+            currentTurn: nextTurn,
+            players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
+          });
+        }
       } else {
+        showRejection(card);
         await updateGameState(roomId!, {
-          passedPile: newPassed,
           playLog: newLog,
-          currentTurn: nextTurn,
-          players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
+          currentTurn: getNextTurnOrder(game)[0] ?? null,
         });
       }
-    } else {
-      const nextUids = getNextTurnOrder(game);
-      showRejection(card);
-      await updateGameState(roomId!, {
-        playLog: newLog,
-        currentTurn: nextUids[0] ?? null,
-      });
+    } catch (e) {
+      flash('เกิดข้อผิดพลาด: ' + String(e));
     }
     setSelected(null);
   }
@@ -237,28 +241,30 @@ export default function GameScreen() {
     const correct = ruleId === game.ruleId;
     const newResults = { ...gp.results, [myUid]: { ruleId, correct } };
 
-    if (correct) {
+    try {
+      if (correct) {
+        await updateGameState(roomId!, {
+          phase: 'gameOver',
+          winnerUid: myUid,
+          guessPhase: { ...gp, results: newResults, currentGuesser: '' },
+        });
+        return;
+      }
+      const remaining = gp.order.filter(u => !newResults[u]);
+      if (remaining.length === 0) {
+        await updateGameState(roomId!, {
+          phase: 'gameOver',
+          winnerUid: null,
+          guessPhase: { ...gp, results: newResults, currentGuesser: '' },
+        });
+        return;
+      }
       await updateGameState(roomId!, {
-        phase: 'gameOver',
-        winnerUid: myUid,
-        guessPhase: { ...gp, results: newResults, currentGuesser: '' },
+        guessPhase: { ...gp, results: newResults, currentGuesser: remaining[0] },
       });
-      return;
+    } catch (e) {
+      flash('เกิดข้อผิดพลาด: ' + String(e));
     }
-
-    const remaining = gp.order.filter(u => !newResults[u]);
-    if (remaining.length === 0) {
-      await updateGameState(roomId!, {
-        phase: 'gameOver',
-        winnerUid: null,
-        guessPhase: { ...gp, results: newResults, currentGuesser: '' },
-      });
-      return;
-    }
-
-    await updateGameState(roomId!, {
-      guessPhase: { ...gp, results: newResults, currentGuesser: remaining[0] },
-    });
   }
 
   if (!game) return (
