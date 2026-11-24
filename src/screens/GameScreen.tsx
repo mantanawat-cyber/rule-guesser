@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Screen, Btn, Panel } from '../components/Layout';
 import CardComponent from '../components/CardComponent';
 import { useGame } from '../store/GameContext';
-import { listenRoom, updateGameState, updatePlayerHand } from '../firebase/room';
+import { listenRoom, updateGameState } from '../firebase/room';
 import { CARD_MAP } from '../data/cards';
 import { RULE_MAP } from '../data/rules';
 import { checkCardValid } from '../game/engine';
@@ -88,7 +88,6 @@ export default function GameScreen() {
       const newPassed = [...(game.passedPile ?? []), selected];
       const nextUids = getNextTurnOrder(game);
       const nextTurn = nextUids[0] ?? null;
-      await updatePlayerHand(roomId!, myUid, newHand);
       if (newHand.length === 0) {
         const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
         const myIdx = nonRM.indexOf(myUid);
@@ -155,7 +154,7 @@ export default function GameScreen() {
     if (!game || !myUid) return;
     const check = game.stuckCheck;
     if (!check) return;
-    const snapshot = Array.isArray(check.handSnapshot) ? check.handSnapshot : Object.values(check.handSnapshot as any);
+    const snapshot: string[] = Array.isArray(check.handSnapshot) ? check.handSnapshot : Object.values(check.handSnapshot as any) as string[];
     const n = snapshot.length;
     const drawCount = Math.max(0, n - 1);
     const newCards = (game.drawPile ?? []).slice(0, drawCount);
@@ -180,7 +179,7 @@ export default function GameScreen() {
     const check = game.stuckCheck;
     if (!check) return;
     const uid = check.requesterUid;
-    const currentHand = Array.isArray(game.players[uid].hand) ? game.players[uid].hand : Object.values(game.players[uid].hand as any);
+    const currentHand = Array.isArray(game.players[uid].hand) ? game.players[uid].hand : Object.values(game.players[uid].hand as any) as string[];
     const newHand = currentHand.filter(id => id !== validCardId);
     const replacement = (game.drawPile ?? [])[0];
     const newDraw = (game.drawPile ?? []).slice(1);
