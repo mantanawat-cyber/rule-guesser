@@ -665,66 +665,49 @@ function StuckCheckPanel({
   const check = game.stuckCheck!;
   const requesterName = game.players[check.requesterUid]?.name ?? '?';
   const handCards = check.handSnapshot.map(id => CARD_MAP[id]).filter(Boolean) as Card[];
-  const [mode, setMode] = useState<'choose' | 'pick'>('choose');
 
   return (
     <Panel style={{ width: '100%', maxWidth: 480, border: '1px solid rgba(200,168,75,0.5)', padding: '14px 16px' }}>
       <div style={{ fontFamily: "'Cinzel', serif", color: '#c8a84b', fontSize: '0.8rem', marginBottom: 4, textAlign: 'center' }}>
         🔍 ตรวจมือตัน
       </div>
-      <div style={{ fontSize: '0.78rem', color: 'rgba(200,168,75,0.6)', textAlign: 'center', marginBottom: 12 }}>
+      <div style={{ fontSize: '0.78rem', color: 'rgba(200,168,75,0.6)', textAlign: 'center', marginBottom: 6 }}>
         <strong style={{ color: 'rgba(232,220,192,0.9)' }}>{requesterName}</strong> ส่งมือให้ตรวจ ({handCards.length} ใบ)
       </div>
+      <div style={{ fontSize: '0.68rem', color: 'rgba(200,168,75,0.45)', textAlign: 'center', marginBottom: 12 }}>
+        {stuckValidPick ? '✓ เลือกไพ่แล้ว — กด "มีไพ่นี้ลงได้" เพื่อยืนยัน' : 'แตะไพ่ที่ลงได้ หรือกด "ตันจริง"'}
+      </div>
 
-      {/* Their hand */}
+      {/* Their hand — always tappable */}
       <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
         {handCards.map(card => (
           <div
             key={card.id}
-            onClick={mode === 'pick' ? () => onPickValid(stuckValidPick === card.id ? null : card.id) : undefined}
-            style={{ cursor: mode === 'pick' ? 'pointer' : 'default', position: 'relative' }}
+            onClick={() => onPickValid(stuckValidPick === card.id ? null : card.id)}
+            style={{ cursor: 'pointer', position: 'relative' }}
           >
-            <CardComponent
-              card={card}
-              size="sm"
-              selected={mode === 'pick' && stuckValidPick === card.id}
-            />
+            <CardComponent card={card} size="sm" selected={stuckValidPick === card.id} />
           </div>
         ))}
       </div>
 
-      {mode === 'choose' ? (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Btn
-            variant="ghost"
-            onClick={onTrulyStuck}
-            style={{ flex: 1, fontSize: '0.78rem', padding: '8px 10px', borderColor: 'rgba(200,80,80,0.4)', color: 'rgba(239,100,100,0.9)' }}
-          >
-            😶 ตันจริง
-          </Btn>
-          <Btn
-            variant="primary"
-            onClick={() => setMode('pick')}
-            style={{ flex: 1, fontSize: '0.78rem', padding: '8px 10px' }}
-          >
-            👆 มีไพ่ลงได้
-          </Btn>
-        </div>
-      ) : (
-        <>
-          <div style={{ fontSize: '0.72rem', color: 'rgba(200,168,75,0.6)', textAlign: 'center', marginBottom: 8 }}>
-            แตะไพ่ที่ลงได้ แล้วกดยืนยัน
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Btn variant="ghost" onClick={() => { setMode('choose'); onPickValid(null); }} style={{ flex: 1, fontSize: '0.78rem', padding: '8px 10px' }}>
-              ← ย้อนกลับ
-            </Btn>
-            <Btn variant="primary" disabled={!stuckValidPick} onClick={onHasValid} style={{ flex: 1, fontSize: '0.78rem', padding: '8px 10px' }}>
-              ✓ ยืนยัน
-            </Btn>
-          </div>
-        </>
-      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Btn
+          variant="ghost"
+          onClick={onTrulyStuck}
+          style={{ flex: 1, fontSize: '0.78rem', padding: '8px 10px', borderColor: 'rgba(200,80,80,0.4)', color: 'rgba(239,100,100,0.9)' }}
+        >
+          😶 ตันจริง
+        </Btn>
+        <Btn
+          variant="primary"
+          disabled={!stuckValidPick}
+          onClick={onHasValid}
+          style={{ flex: 1, fontSize: '0.78rem', padding: '8px 10px' }}
+        >
+          👆 มีไพ่นี้ลงได้
+        </Btn>
+      </div>
     </Panel>
   );
 }
