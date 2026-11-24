@@ -103,6 +103,7 @@ export default function GameScreen() {
 
   async function playCard() {
     if (!game || !myUid || !selected || !rule) return;
+    if (game.stuckCheck) return;
     const card = CARD_MAP[selected];
     if (!card) return;
     const valid = checkCardValid(card, passedTopCard, rule);
@@ -554,7 +555,7 @@ export default function GameScreen() {
               </Btn>
               <Btn
                 variant="primary"
-                disabled={!selected}
+                disabled={!selected || !!game.stuckCheck}
                 onClick={playCard}
                 style={{ flex: 2, fontSize: '0.85rem', padding: '10px 16px' }}
               >
