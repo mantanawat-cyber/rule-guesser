@@ -155,18 +155,23 @@ export default function GameScreen() {
     if (!game || !myUid) return;
     const check = game.stuckCheck;
     if (!check) return;
-    const n = check.handSnapshot.length;
+    const snapshot = Array.isArray(check.handSnapshot) ? check.handSnapshot : Object.values(check.handSnapshot as any);
+    const n = snapshot.length;
     const drawCount = Math.max(0, n - 1);
     const newCards = (game.drawPile ?? []).slice(0, drawCount);
     const newDraw = (game.drawPile ?? []).slice(drawCount);
     const nextTurn = getNextTurnOrder({ ...game, currentTurn: check.requesterUid })[0] ?? null;
-    await updateGameState(roomId!, {
-      stuckCheck: null,
-      drawPile: newDraw,
-      discardPile: [...(game.discardPile ?? []), ...check.handSnapshot],
-      currentTurn: nextTurn,
-      players: { ...game.players, [check.requesterUid]: { ...game.players[check.requesterUid], hand: newCards } },
-    });
+    try {
+      await updateGameState(roomId!, {
+        stuckCheck: null,
+        drawPile: newDraw,
+        discardPile: [...(game.discardPile ?? []), ...snapshot],
+        currentTurn: nextTurn,
+        players: { ...game.players, [check.requesterUid]: { ...game.players[check.requesterUid], hand: newCards } },
+      });
+    } catch (e) {
+      flash('เกิดข้อผิดพลาด: ' + String(e));
+    }
     setStuckValidPick(null);
   }
 
@@ -175,21 +180,26 @@ export default function GameScreen() {
     const check = game.stuckCheck;
     if (!check) return;
     const uid = check.requesterUid;
-    const newHand = game.players[uid].hand.filter(id => id !== validCardId);
+    const currentHand = Array.isArray(game.players[uid].hand) ? game.players[uid].hand : Object.values(game.players[uid].hand as any);
+    const newHand = currentHand.filter(id => id !== validCardId);
     const replacement = (game.drawPile ?? [])[0];
     const newDraw = (game.drawPile ?? []).slice(1);
     const finalHand = replacement ? [...newHand, replacement] : newHand;
     const newPassed = [...(game.passedPile ?? []), validCardId];
     const newLog = [...(game.playLog ?? []), { cardId: validCardId, result: 'pass' as const, uid }];
     const nextTurn = getNextTurnOrder({ ...game, currentTurn: uid })[0] ?? null;
-    await updateGameState(roomId!, {
-      stuckCheck: null,
-      drawPile: newDraw,
-      passedPile: newPassed,
-      playLog: newLog,
-      currentTurn: nextTurn,
-      players: { ...game.players, [uid]: { ...game.players[uid], hand: finalHand } },
-    });
+    try {
+      await updateGameState(roomId!, {
+        stuckCheck: null,
+        drawPile: newDraw,
+        passedPile: newPassed,
+        playLog: newLog,
+        currentTurn: nextTurn,
+        players: { ...game.players, [uid]: { ...game.players[uid], hand: finalHand } },
+      });
+    } catch (e) {
+      flash('เกิดข้อผิดพลาด: ' + String(e));
+    }
     setStuckValidPick(null);
   }
 
@@ -621,7 +631,8 @@ function StuckCheckPanel({
 }) {
   const check = game.stuckCheck!;
   const requesterName = game.players[check.requesterUid]?.name ?? '?';
-  const handCards = check.handSnapshot.map(id => CARD_MAP[id]).filter(Boolean) as Card[];
+  const snapshot = Array.isArray(check.handSnapshot) ? check.handSnapshot : Object.values(check.handSnapshot as any) as string[];
+  const handCards = snapshot.map(id => CARD_MAP[id]).filter(Boolean) as Card[];
   const [mode, setMode] = useState<'choose' | 'pick'>('choose');
 
   return (
