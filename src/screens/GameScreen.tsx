@@ -9,6 +9,29 @@ import { checkCardValid } from '../game/engine';
 import { ALL_RULES } from '../data/rules';
 import type { Card, GameState } from '../types';
 
+function toArr<T>(v: T[] | Record<string, T> | null | undefined): T[] {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  return Object.values(v);
+}
+
+function normalizeGame(raw: GameState): GameState {
+  return {
+    ...raw,
+    passedPile: toArr(raw.passedPile as any),
+    failedPile: toArr(raw.failedPile as any),
+    drawPile: toArr(raw.drawPile as any),
+    discardPile: toArr(raw.discardPile as any),
+    playLog: toArr(raw.playLog as any),
+    players: Object.fromEntries(
+      Object.entries(raw.players ?? {}).map(([uid, p]) => [
+        uid,
+        { ...p, hand: toArr((p as any).hand) },
+      ])
+    ),
+  };
+}
+
 const ANIM_STYLES = `
 @keyframes rg-shake {
   0%,100% { transform: translateX(0) rotate(0deg); }
@@ -55,7 +78,7 @@ export default function GameScreen() {
   useEffect(() => {
     if (!roomId) return;
     return listenRoom(roomId, data => {
-      if (data) setGame(data);
+      if (data) setGame(normalizeGame(data));
     });
   }, [roomId]);
 
@@ -154,7 +177,7 @@ export default function GameScreen() {
     if (!game || !myUid) return;
     const check = game.stuckCheck;
     if (!check) return;
-    const snapshot: string[] = Array.isArray(check.handSnapshot) ? check.handSnapshot : Object.values(check.handSnapshot as any) as string[];
+    const snapshot = toArr<string>(check.handSnapshot as any);
     const n = snapshot.length;
     const drawCount = Math.max(0, n - 1);
     const newCards = (game.drawPile ?? []).slice(0, drawCount);
@@ -179,7 +202,7 @@ export default function GameScreen() {
     const check = game.stuckCheck;
     if (!check) return;
     const uid = check.requesterUid;
-    const currentHand = Array.isArray(game.players[uid].hand) ? game.players[uid].hand : Object.values(game.players[uid].hand as any) as string[];
+    const currentHand = game.players[uid].hand;
     const newHand = currentHand.filter(id => id !== validCardId);
     const replacement = (game.drawPile ?? [])[0];
     const newDraw = (game.drawPile ?? []).slice(1);
@@ -630,8 +653,7 @@ function StuckCheckPanel({
 }) {
   const check = game.stuckCheck!;
   const requesterName = game.players[check.requesterUid]?.name ?? '?';
-  const snapshot = Array.isArray(check.handSnapshot) ? check.handSnapshot : Object.values(check.handSnapshot as any) as string[];
-  const handCards = snapshot.map(id => CARD_MAP[id]).filter(Boolean) as Card[];
+  const handCards = toArr<string>(check.handSnapshot as any).map(id => CARD_MAP[id]).filter(Boolean) as Card[];
   const [mode, setMode] = useState<'choose' | 'pick'>('choose');
 
   return (
