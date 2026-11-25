@@ -222,35 +222,38 @@ export default function GameScreen() {
     if (game.stuckCheck) return;
     const card = CARD_MAP[selected];
     if (!card) return;
+
+    // Compute everything synchronously before any await (closure-safe)
+    const cardId = selected;
     const valid = checkCardValid(card, passedTopCard, rule);
+    const newHand = myHand.filter(c => c.id !== cardId).map(c => c.id);
+    const newLog = [...(game.playLog ?? []), { cardId, result: valid ? 'pass' : 'fail', uid: myUid } as const];
+    const newPassed = valid ? [...(game.passedPile ?? []), cardId] : null;
+    const nextTurn = getNextTurnOrder(game)[0] ?? null;
+    const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+    const myIdx = nonRM.indexOf(myUid);
+    const guessOrder = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
 
     if (valid) {
-      setPlayingCard(selected);
+      setPlayingCard(cardId);
       setSelected(null);
       await new Promise(r => setTimeout(r, 300));
       setPlayingCard(null);
     }
-    const newHand = myHand.filter(c => c.id !== selected).map(c => c.id);
-    const newLog = [...(game.playLog ?? []), { cardId: selected, result: valid ? 'pass' : 'fail', uid: myUid } as const];
 
     try {
       if (valid) {
-        const newPassed = [...(game.passedPile ?? []), selected];
-        const nextTurn = getNextTurnOrder(game)[0] ?? null;
         if (newHand.length === 0) {
-          const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
-          const myIdx = nonRM.indexOf(myUid);
-          const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
           await updateGameState(roomId!, {
-            passedPile: newPassed,
+            passedPile: newPassed!,
             playLog: newLog,
             phase: 'guess',
-            guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
+            guessPhase: { triggeredBy: myUid, order: guessOrder, currentGuesser: guessOrder[0], results: {} },
             players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
           });
         } else {
           await updateGameState(roomId!, {
-            passedPile: newPassed,
+            passedPile: newPassed!,
             playLog: newLog,
             currentTurn: nextTurn,
             players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
@@ -260,7 +263,7 @@ export default function GameScreen() {
         showRejection(card);
         await updateGameState(roomId!, {
           playLog: newLog,
-          currentTurn: getNextTurnOrder(game)[0] ?? null,
+          currentTurn: nextTurn,
         });
       }
     } catch (e) {
