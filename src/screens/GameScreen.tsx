@@ -137,14 +137,21 @@ const ANIM_STYLES = `
 .rg-winner-glow  { animation: rg-winner-glow 2s ease-in-out infinite; }
 .rg-latest-pulse { animation: rg-latest-pulse 2.5s ease-in-out infinite; border-radius: 7px; }
 .rg-card-hand {
-  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.22s cubic-bezier(0.22,1,0.36,1),
+    filter    0.18s ease,
+    box-shadow 0.22s cubic-bezier(0.22,1,0.36,1);
   cursor: pointer;
+  will-change: transform;
 }
-.rg-card-hand:hover { transform: translateY(-7px) scale(1.05); filter: brightness(1.12); }
+.rg-card-hand:hover:not(.rg-card-selected) {
+  transform: translateY(-6px) scale(1.04);
+  filter: brightness(1.1);
+}
 .rg-card-hand.rg-card-selected {
-  transform: translateY(-12px) scale(1.08) !important;
-  filter: brightness(1.18) !important;
-  box-shadow: 0 0 0 2.5px rgba(200,168,75,0.85), 0 8px 24px rgba(200,168,75,0.35);
+  transform: translateY(-14px) scale(1.07);
+  filter: brightness(1.2);
+  box-shadow: 0 0 0 2px rgba(210,160,50,0.9), 0 10px 28px rgba(200,140,30,0.4), 0 0 18px rgba(200,140,30,0.2);
   border-radius: 8px;
 }
 .rg-card-playing {
