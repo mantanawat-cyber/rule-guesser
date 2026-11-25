@@ -11,8 +11,16 @@ export function Screen({ children, style }: { children: ReactNode; style?: CSSPr
       paddingRight: 'max(16px, env(safe-area-inset-right,0px))',
       paddingBottom: 'max(16px, env(safe-area-inset-bottom,0px))',
       paddingTop: 'max(16px, env(safe-area-inset-top,0px))',
+      position: 'relative',
+      zIndex: 1,
       ...style,
     }}>
+      {/* Golden top glow — matches cover screen, pure CSS */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: '35vh',
+        background: 'radial-gradient(ellipse 70% 100% at 50% 0%, rgba(200,168,75,.055) 0%, transparent 70%)',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
       {children}
     </div>
   );
