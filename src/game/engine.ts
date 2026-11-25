@@ -67,6 +67,19 @@ export function getPlayerTurnOrder(state: GameState): string[] {
   return Object.keys(state.players).filter(uid => uid !== state.rulemasterUid);
 }
 
+function pickStarterCard(deck: string[], ruleId: string): { starterId: string; remainingDeck: string[] } {
+  const rule = ALL_RULES.find(r => r.id === ruleId)!;
+  const idx = deck.findIndex(id => {
+    const card = ALL_CARDS.find(c => c.id === id)!;
+    return checkCardValid(card, null, rule);
+  });
+  const starterIdx = idx === -1 ? 0 : idx;
+  return {
+    starterId: deck[starterIdx],
+    remainingDeck: deck.filter((_, i) => i !== starterIdx),
+  };
+}
+
 export function buildInitialGameState(
   hostUid: string,
   roomCode: string,
@@ -74,10 +87,13 @@ export function buildInitialGameState(
   ruleId: string,
 ): GameState {
   const uids = Object.keys(playerNames);
-  const deck = createDeck();
+  const rawDeck = createDeck();
   const HAND_SIZE = 5;
 
-  // Solo mode: 1 player gets cards + can see the rule (for testing)
+  const { starterId, remainingDeck: deck } = pickStarterCard(rawDeck, ruleId);
+  const starterLog = [{ cardId: starterId, result: 'pass' as const, uid: 'system' }];
+
+  // Solo mode
   if (uids.length === 1) {
     const uid = uids[0];
     return {
@@ -88,7 +104,7 @@ export function buildInitialGameState(
       rulemasterUid: null,
       rulemasterOrder: [uid],
       currentRulemasterIndex: 0,
-      passedPile: [],
+      passedPile: [starterId],
       failedPile: [],
       drawPile: deck.slice(HAND_SIZE),
       discardPile: [],
@@ -97,7 +113,7 @@ export function buildInitialGameState(
       },
       guessPhase: null,
       stuckCheck: null,
-      playLog: [],
+      playLog: starterLog,
       round: 1,
       winnerUid: null,
       hostUid,
@@ -122,7 +138,6 @@ export function buildInitialGameState(
     };
   }
 
-  const drawPile = deck.slice(deckIdx);
   const nonRulemasters = shuffledUids.filter(u => u !== rulemasterUid);
 
   return {
@@ -133,14 +148,14 @@ export function buildInitialGameState(
     rulemasterUid,
     rulemasterOrder: shuffledUids,
     currentRulemasterIndex: 0,
-    passedPile: [],
+    passedPile: [starterId],
     failedPile: [],
-    drawPile,
+    drawPile: deck.slice(deckIdx),
     discardPile: [],
     players,
     guessPhase: null,
     stuckCheck: null,
-    playLog: [],
+    playLog: starterLog,
     round: 1,
     winnerUid: null,
     hostUid,

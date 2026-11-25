@@ -161,9 +161,9 @@ export default function GameScreen() {
         flash('ยังมีไพ่ที่ลงได้อยู่!');
         return;
       }
-      // Truly stuck — draw n-1 replacements
+      // Truly stuck — draw n-1 replacements (minimum 1)
       const n = myHand.length;
-      const drawCount = Math.max(0, n - 1);
+      const drawCount = Math.min(game.drawPile.length, Math.max(1, n - 1));
       const newCards = (game.drawPile ?? []).slice(0, drawCount);
       const newDraw = (game.drawPile ?? []).slice(drawCount);
       await updateGameState(roomId!, {
@@ -188,7 +188,7 @@ export default function GameScreen() {
     if (!check) return;
     const snapshot = check.handSnapshot;
     const n = snapshot.length;
-    const drawCount = Math.max(0, n - 1);
+    const drawCount = Math.min(game.drawPile.length, Math.max(1, n - 1));
     const newCards = (game.drawPile ?? []).slice(0, drawCount);
     const newDraw = (game.drawPile ?? []).slice(drawCount);
     const nextTurn = getNextTurnOrder({ ...game, currentTurn: check.requesterUid })[0] ?? null;
