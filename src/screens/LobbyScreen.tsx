@@ -17,6 +17,12 @@ export default function LobbyScreen() {
   const isHost = roomData?.hostUid === myUid;
 
   useEffect(() => {
+    const count = Object.keys(roomData?.players ?? {}).length;
+    if (count >= 2 && gameMode === 'practice') setGameMode('vs_system');
+    if (count === 1 && gameMode === 'vs_system') setGameMode('practice');
+  }, [Object.keys(roomData?.players ?? {}).length]);
+
+  useEffect(() => {
     if (!roomId) return;
     const unsub = listenRoom(roomId, data => {
       if (!data) return;

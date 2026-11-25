@@ -215,16 +215,27 @@ export default function GameScreen() {
         const newPassed = [...(game.passedPile ?? []), selected];
         const nextTurn = getNextTurnOrder(game)[0] ?? null;
         if (newHand.length === 0) {
-          const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
-          const myIdx = nonRM.indexOf(myUid);
-          const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
-          await updateGameState(roomId!, {
-            passedPile: newPassed,
-            playLog: newLog,
-            phase: 'guess',
-            guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
-            players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
-          });
+          if (isSolo) {
+            // Solo: win immediately — no guess phase needed
+            await updateGameState(roomId!, {
+              passedPile: newPassed,
+              playLog: newLog,
+              phase: 'gameOver',
+              winnerUid: myUid,
+              players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
+            });
+          } else {
+            const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+            const myIdx = nonRM.indexOf(myUid);
+            const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
+            await updateGameState(roomId!, {
+              passedPile: newPassed,
+              playLog: newLog,
+              phase: 'guess',
+              guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
+              players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newHand } },
+            });
+          }
         } else {
           await updateGameState(roomId!, {
             passedPile: newPassed,
