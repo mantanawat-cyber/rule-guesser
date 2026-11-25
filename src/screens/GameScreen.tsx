@@ -88,11 +88,28 @@ const ANIM_STYLES = `
   0%,100% { text-shadow: 0 0 10px rgba(200,168,75,0.4); }
   50%     { text-shadow: 0 0 30px rgba(200,168,75,0.9), 0 0 60px rgba(200,168,75,0.4); }
 }
-.rg-shake       { animation: rg-shake 0.5s ease-in-out; }
-.rg-toast-enter { animation: rg-toast-in  0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-.rg-toast-exit  { animation: rg-toast-out 0.25s ease-in forwards; }
-.rg-pass-glow   { animation: rg-pass-glow 0.7s ease-out forwards; }
-.rg-winner-glow { animation: rg-winner-glow 2s ease-in-out infinite; }
+@keyframes rg-particle-float {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.35; }
+  92%  { opacity: 0.12; }
+  100% { transform: translateY(-100vh) translateX(var(--drift)) rotate(180deg); opacity: 0; }
+}
+@keyframes rg-latest-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+  50%     { box-shadow: 0 0 10px 3px rgba(200,168,75,0.35); }
+}
+.rg-shake        { animation: rg-shake 0.5s ease-in-out; }
+.rg-toast-enter  { animation: rg-toast-in  0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.rg-toast-exit   { animation: rg-toast-out 0.25s ease-in forwards; }
+.rg-pass-glow    { animation: rg-pass-glow 0.7s ease-out forwards; }
+.rg-winner-glow  { animation: rg-winner-glow 2s ease-in-out infinite; }
+.rg-latest-pulse { animation: rg-latest-pulse 2.5s ease-in-out infinite; border-radius: 7px; }
+.rg-card-hand {
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease;
+  cursor: pointer;
+}
+.rg-card-hand:hover  { transform: translateY(-7px) scale(1.05); filter: brightness(1.12); }
+.rg-card-hand-dimmed { transition: filter 0.15s ease; }
 `;
 
 export default function GameScreen() {
@@ -517,6 +534,8 @@ export default function GameScreen() {
         </div>
       )}
 
+      <AmbientParticles />
+
       {/* Red flash overlay on fail */}
       {showRedFlash && (
         <div style={{
@@ -624,8 +643,12 @@ export default function GameScreen() {
                     const isLatest = idx === log.length - 1;
                     const isFail = entry.result === 'fail';
                     const playerName = game.players[entry.uid]?.name ?? '?';
+                    const cardClass = [
+                      isLatest && passFlash && !isFail ? 'rg-pass-glow' : '',
+                      isLatest && !passFlash && !isFail ? 'rg-latest-pulse' : '',
+                    ].filter(Boolean).join(' ') || undefined;
                     return (
-                      <div key={`${entry.cardId}-${idx}`} style={{ position: 'relative', flexShrink: 0 }} className={isLatest && passFlash && !isFail ? 'rg-pass-glow' : undefined}>
+                      <div key={`${entry.cardId}-${idx}`} style={{ position: 'relative', flexShrink: 0 }} className={cardClass}>
                         {/* Result badge */}
                         <div style={{
                           position: 'absolute', top: -8, left: '50%',
@@ -773,7 +796,10 @@ export default function GameScreen() {
             {myHand.map(card => (
               <div
                 key={card.id}
-                className={rejectedCard?.id === card.id ? 'rg-shake' : undefined}
+                className={[
+                  rejectedCard?.id === card.id ? 'rg-shake' : '',
+                  myTurn ? 'rg-card-hand' : 'rg-card-hand-dimmed',
+                ].filter(Boolean).join(' ')}
               >
                 <CardComponent
                   card={card}
@@ -950,6 +976,34 @@ function StuckCheckPanel({
         </Btn>
       </div>
     </Panel>
+  );
+}
+
+function AmbientParticles() {
+  const particles = Array.from({ length: 28 }, (_, i) => ({
+    id: i,
+    left: (i * 3.7 + Math.sin(i * 1.3) * 15 + 50) % 100,
+    bottom: (i * 7.1) % 100,
+    duration: 14 + (i * 2.3) % 12,
+    delay: -(i * 1.9) % 18,
+    size: 2 + (i % 3),
+    drift: `${((i % 2 === 0 ? 1 : -1) * (8 + (i % 15)))}px`,
+    opacity: 0.15 + (i % 4) * 0.07,
+  }));
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position: 'absolute',
+          left: `${p.left}%`, bottom: `${p.bottom}%`,
+          width: p.size, height: p.size,
+          borderRadius: '50%',
+          background: 'rgba(200,168,75,0.6)',
+          '--drift': p.drift,
+          animation: `rg-particle-float ${p.duration}s ${p.delay}s linear infinite`,
+        } as React.CSSProperties} />
+      ))}
+    </div>
   );
 }
 
