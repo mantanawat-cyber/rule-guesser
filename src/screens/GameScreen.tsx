@@ -512,6 +512,22 @@ export default function GameScreen() {
         <GuessPhasePanel game={game} myUid={myUid!} onGuess={handleGuess} />
       )}
 
+      {/* Rulemaster: stuck check notification banner */}
+      {isRulemaster && game.stuckCheck && (
+        <div style={{
+          width: '100%', maxWidth: 480,
+          padding: '8px 16px',
+          borderRadius: 8,
+          background: 'rgba(200,100,30,0.15)',
+          border: '1px solid rgba(200,120,30,0.5)',
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: '0.78rem', color: 'rgba(255,180,80,0.9)',
+        }}>
+          <span style={{ fontSize: '1rem' }}>🔔</span>
+          <span><strong>{game.players[game.stuckCheck.requesterUid]?.name ?? '?'}</strong> ขอให้ตรวจมือตัน — ดูด้านล่าง</span>
+        </div>
+      )}
+
       {/* Rulemaster: stuck check review panel */}
       {isRulemaster && game.phase === 'playing' && game.stuckCheck && (
         <StuckCheckPanel
@@ -549,42 +565,43 @@ export default function GameScreen() {
             )}
           </div>
 
-          {myTurn && (
+          {/* Stuck check pending — waiting for rulemaster */}
+          {game.stuckCheck?.requesterUid === myUid ? (
+            <div style={{
+              marginTop: 14,
+              padding: '12px 16px',
+              borderRadius: 10,
+              background: 'rgba(200,168,75,0.07)',
+              border: '1.5px solid rgba(200,168,75,0.35)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '1.1rem', marginBottom: 4 }}>🔍</div>
+              <div style={{ fontSize: '0.82rem', color: '#c8a84b', fontWeight: 600, marginBottom: 2 }}>
+                ส่งมือให้ตรวจแล้ว
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(200,168,75,0.55)' }}>
+                รอคนคุมกฎตรวจสอบ — ห้ามวางไพ่ระหว่างนี้
+              </div>
+            </div>
+          ) : myTurn ? (
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
               <Btn
                 variant="ghost"
                 onClick={requestStuckCheck}
-                disabled={!!game.stuckCheck}
-                style={{ flex: 1, fontSize: '0.75rem', padding: '8px 10px', opacity: game.stuckCheck ? 0.5 : 1 }}
+                style={{ flex: 1, fontSize: '0.75rem', padding: '8px 10px' }}
               >
                 🔍 ตรวจมือตัน
               </Btn>
               <Btn
                 variant="primary"
-                disabled={!selected || !!game.stuckCheck}
+                disabled={!selected}
                 onClick={playCard}
                 style={{ flex: 2, fontSize: '0.85rem', padding: '10px 16px' }}
               >
                 ⬆ วางไพ่
               </Btn>
             </div>
-          )}
-
-          {/* Waiting for stuck check verdict */}
-          {!myTurn && game.stuckCheck?.requesterUid === myUid && (
-            <div style={{
-              marginTop: 10,
-              padding: '8px 12px',
-              borderRadius: 8,
-              background: 'rgba(200,168,75,0.08)',
-              border: '1px solid rgba(200,168,75,0.25)',
-              textAlign: 'center',
-              fontSize: '0.78rem',
-              color: 'rgba(200,168,75,0.7)',
-            }}>
-              ⏳ รอคนคุมกฎตรวจมือตัน...
-            </div>
-          )}
+          ) : null}
         </Panel>
       )}
 
