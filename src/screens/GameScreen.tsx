@@ -98,6 +98,11 @@ const ANIM_STYLES = `
   0%,100% { box-shadow: 0 0 0 0 rgba(200,168,75,0); }
   50%     { box-shadow: 0 0 10px 3px rgba(200,168,75,0.35); }
 }
+@keyframes rg-card-play-out {
+  0%   { transform: translateY(-12px) scale(1.08); opacity: 1; }
+  45%  { transform: translateY(-55px) scale(0.9);  opacity: 0.7; }
+  100% { transform: translateY(-130px) scale(0.4); opacity: 0; }
+}
 .rg-shake        { animation: rg-shake 0.5s ease-in-out; }
 .rg-toast-enter  { animation: rg-toast-in  0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 .rg-toast-exit   { animation: rg-toast-out 0.25s ease-in forwards; }
@@ -105,10 +110,20 @@ const ANIM_STYLES = `
 .rg-winner-glow  { animation: rg-winner-glow 2s ease-in-out infinite; }
 .rg-latest-pulse { animation: rg-latest-pulse 2.5s ease-in-out infinite; border-radius: 7px; }
 .rg-card-hand {
-  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease, box-shadow 0.18s ease;
   cursor: pointer;
 }
-.rg-card-hand:hover  { transform: translateY(-7px) scale(1.05); filter: brightness(1.12); }
+.rg-card-hand:hover { transform: translateY(-7px) scale(1.05); filter: brightness(1.12); }
+.rg-card-hand.rg-card-selected {
+  transform: translateY(-12px) scale(1.08) !important;
+  filter: brightness(1.18) !important;
+  box-shadow: 0 0 0 2.5px rgba(200,168,75,0.85), 0 8px 24px rgba(200,168,75,0.35);
+  border-radius: 8px;
+}
+.rg-card-playing {
+  animation: rg-card-play-out 0.32s cubic-bezier(0.4,0,1,1) forwards;
+  pointer-events: none;
+}
 .rg-card-hand-dimmed { transition: filter 0.15s ease; }
 `;
 
@@ -121,6 +136,7 @@ export default function GameScreen() {
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stuckValidPick, setStuckValidPick] = useState<string | null>(null);
+  const [playingCard, setPlayingCard] = useState<string | null>(null);
 
   const [showTurnBanner, setShowTurnBanner] = useState(false);
   const [showRedFlash, setShowRedFlash] = useState(false);
@@ -207,6 +223,13 @@ export default function GameScreen() {
     const card = CARD_MAP[selected];
     if (!card) return;
     const valid = checkCardValid(card, passedTopCard, rule);
+
+    if (valid) {
+      setPlayingCard(selected);
+      setSelected(null);
+      await new Promise(r => setTimeout(r, 300));
+      setPlayingCard(null);
+    }
     const newHand = myHand.filter(c => c.id !== selected).map(c => c.id);
     const newLog = [...(game.playLog ?? []), { cardId: selected, result: valid ? 'pass' : 'fail', uid: myUid } as const];
 
@@ -840,7 +863,10 @@ export default function GameScreen() {
                 key={card.id}
                 className={[
                   rejectedCard?.id === card.id ? 'rg-shake' : '',
-                  myTurn ? 'rg-card-hand' : 'rg-card-hand-dimmed',
+                  playingCard === card.id ? 'rg-card-hand rg-card-playing' : '',
+                  playingCard !== card.id && myTurn ? 'rg-card-hand' : '',
+                  playingCard !== card.id && myTurn && selected === card.id ? 'rg-card-selected' : '',
+                  !myTurn && playingCard !== card.id ? 'rg-card-hand-dimmed' : '',
                 ].filter(Boolean).join(' ')}
               >
                 <CardComponent
