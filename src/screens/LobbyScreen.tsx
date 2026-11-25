@@ -5,10 +5,13 @@ import { listenRoom, setPlayerReady, startGame } from '../firebase/room';
 import { buildInitialGameState, pickRandomRule } from '../game/engine';
 import type { GameState } from '../types';
 
+type GameMode = 'practice' | 'vs_system' | 'multiplayer';
+
 export default function LobbyScreen() {
   const { state, dispatch } = useGame();
   const [roomData, setRoomData] = useState<GameState | null>(null);
   const [copied, setCopied] = useState(false);
+  const [gameMode, setGameMode] = useState<GameMode>('vs_system');
 
   const { roomId, myUid, roomCode } = state;
   const isHost = roomData?.hostUid === myUid;
@@ -39,7 +42,11 @@ export default function LobbyScreen() {
       playerNames[uid] = (p as any).name;
     });
     const rule = pickRandomRule();
-    const gameState = buildInitialGameState(myUid, roomCode ?? '', playerNames, rule.id);
+    const isSoloPlayer = Object.keys(playerNames).length === 1;
+    const opts = isSoloPlayer && gameMode !== 'vs_system'
+      ? {}
+      : { systemRulemaster: gameMode === 'vs_system' };
+    const gameState = buildInitialGameState(myUid, roomCode ?? '', playerNames, rule.id, opts);
     await startGame(roomId, gameState);
   }
 
@@ -117,7 +124,40 @@ export default function LobbyScreen() {
           </div>
         </div>
 
-        {isSolo && (
+        {/* Host: game mode selector */}
+        {isHost && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ color: 'rgba(200,168,75,0.6)', fontSize: '0.72rem', marginBottom: 8, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em' }}>
+              โหมดเกม
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {([
+                { id: 'vs_system', label: '🤖 VS ระบบ', desc: 'ระบบคุมกฎ — ไม่มีใครเห็นกฎ (แนะนำ)' },
+                { id: 'multiplayer', label: '👥 Multiplayer', desc: 'ผู้เล่น 1 คนรู้กฎ คนอื่นทาย', disabled: players.length < 2 },
+                { id: 'practice', label: '🧪 Solo ฝึก', desc: 'เห็นกฎ เล่นคนเดียวเพื่อทดสอบ' },
+              ] as { id: GameMode; label: string; desc: string; disabled?: boolean }[]).map(opt => (
+                <button
+                  key={opt.id}
+                  disabled={opt.disabled}
+                  onClick={() => !opt.disabled && setGameMode(opt.id)}
+                  style={{
+                    textAlign: 'left', padding: '8px 12px', borderRadius: 8, cursor: opt.disabled ? 'default' : 'pointer',
+                    background: gameMode === opt.id ? 'rgba(200,168,75,0.12)' : 'rgba(0,0,0,0.2)',
+                    border: gameMode === opt.id ? '1.5px solid rgba(200,168,75,0.5)' : '1px solid rgba(255,255,255,0.06)',
+                    color: opt.disabled ? 'rgba(200,168,75,0.2)' : gameMode === opt.id ? '#c8a84b' : 'rgba(232,220,192,0.6)',
+                    fontSize: '0.82rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}
+                >
+                  <span>{opt.label}</span>
+                  <span style={{ fontSize: '0.68rem', opacity: 0.65 }}>{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isHost && isSolo && (
           <div style={{ color: 'rgba(200,168,75,0.5)', fontSize: '0.8rem', textAlign: 'center', marginBottom: 12, padding: '6px 10px', background: 'rgba(200,168,75,0.06)', borderRadius: 6, border: '1px solid rgba(200,168,75,0.2)' }}>
             🧪 Solo Test Mode — กฎจะแสดงให้เห็น
           </div>

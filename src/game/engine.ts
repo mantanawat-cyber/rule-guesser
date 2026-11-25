@@ -85,6 +85,7 @@ export function buildInitialGameState(
   roomCode: string,
   playerNames: Record<string, string>,
   ruleId: string,
+  options: { systemRulemaster?: boolean } = {},
 ): GameState {
   const uids = Object.keys(playerNames);
   const rawDeck = createDeck();
@@ -92,6 +93,43 @@ export function buildInitialGameState(
 
   const { starterId, remainingDeck: deck } = pickStarterCard(rawDeck, ruleId);
   const starterLog = [{ cardId: starterId, result: 'pass' as const, uid: 'system' }];
+
+  // VS System mode: system is rulemaster, all humans get hands, nobody sees rule
+  if (options.systemRulemaster) {
+    const shuffledUids = shuffleArray(uids);
+    const players: GameState['players'] = {};
+    let deckIdx = 0;
+    for (const uid of uids) {
+      players[uid] = {
+        name: playerNames[uid],
+        hand: deck.slice(deckIdx, deckIdx + HAND_SIZE),
+        isRulemaster: false,
+        joinedAt: Date.now(),
+      };
+      deckIdx += HAND_SIZE;
+    }
+    return {
+      phase: 'playing',
+      ruleId,
+      ruleVisibleTo: [],
+      currentTurn: shuffledUids[0],
+      rulemasterUid: 'system',
+      rulemasterOrder: ['system'],
+      currentRulemasterIndex: 0,
+      passedPile: [starterId],
+      failedPile: [],
+      drawPile: deck.slice(deckIdx),
+      discardPile: [],
+      players,
+      guessPhase: null,
+      stuckCheck: null,
+      playLog: starterLog,
+      round: 1,
+      winnerUid: null,
+      hostUid,
+      roomCode,
+    };
+  }
 
   // Solo mode
   if (uids.length === 1) {

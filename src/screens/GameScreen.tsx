@@ -74,8 +74,9 @@ export default function GameScreen() {
   const [stuckValidPick, setStuckValidPick] = useState<string | null>(null);
 
   const { roomId, myUid } = state;
-  const isSolo = game ? Object.keys(game.players).length === 1 : false;
-  const isRulemaster = !isSolo && game?.rulemasterUid === myUid;
+  const isVsSystem = game?.rulemasterUid === 'system';
+  const isSolo = !isVsSystem && game?.rulemasterUid === null;
+  const isRulemaster = !isSolo && !isVsSystem && game?.rulemasterUid === myUid;
   const canSeeRule = isSolo || isRulemaster;
   const myTurn = game?.currentTurn === myUid;
   const myHand = (game?.players?.[myUid!]?.hand ?? []).map(id => CARD_MAP[id]).filter(Boolean) as Card[];
@@ -154,24 +155,27 @@ export default function GameScreen() {
     if (!game || !myUid || !myTurn) return;
     if (game.stuckCheck) return;
 
-    // Solo: auto-check with rule engine
-    if (isSolo && rule) {
+    // Solo / VS System: auto-check with rule engine (no human rulemaster needed)
+    if ((isSolo || isVsSystem) && rule) {
       const stuck = !myHand.some(c => checkCardValid(c, passedTopCard, rule));
       if (!stuck) {
         flash('ยังมีไพ่ที่ลงได้อยู่!');
         return;
       }
-      // Truly stuck — draw n-1 replacements (minimum 1)
       const n = myHand.length;
       const drawCount = Math.min(game.drawPile.length, Math.max(1, n - 1));
       const newCards = (game.drawPile ?? []).slice(0, drawCount);
       const newDraw = (game.drawPile ?? []).slice(drawCount);
-      await updateGameState(roomId!, {
-        stuckCheck: null,
-        drawPile: newDraw,
-        discardPile: [...(game.discardPile ?? []), ...myHand.map(c => c.id)],
-        players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newCards } },
-      });
+      try {
+        await updateGameState(roomId!, {
+          stuckCheck: null,
+          drawPile: newDraw,
+          discardPile: [...(game.discardPile ?? []), ...myHand.map(c => c.id)],
+          players: { ...game.players, [myUid]: { ...game.players[myUid], hand: newCards } },
+        });
+      } catch (e) {
+        flash('เกิดข้อผิดพลาด: ' + String(e));
+      }
       flash(`ตันจริง! จั่ว ${drawCount} ใบใหม่`);
       return;
     }
@@ -349,7 +353,7 @@ export default function GameScreen() {
           ⚜ เกมทายกฎลับ
         </div>
         <div style={{ fontSize: '0.75rem', color: myTurn ? '#c8a84b' : 'rgba(200,168,75,0.4)' }}>
-          {isRulemaster ? '👑 คนคุมกฎ' : myTurn ? '⚡ เทิร์นของคุณ' : 'รอเทิร์น...'}
+          {isRulemaster ? '👑 คนคุมกฎ' : isVsSystem ? (myTurn ? '⚡ เทิร์นของคุณ' : '🤖 ระบบคุมกฎ') : myTurn ? '⚡ เทิร์นของคุณ' : 'รอเทิร์น...'}
         </div>
       </div>
 
@@ -474,7 +478,7 @@ export default function GameScreen() {
           {Object.entries(game.players ?? {}).map(([uid, p]) => {
             const player = p as any;
             const isCurrent = game.currentTurn === uid;
-            const isRM = uid === game.rulemasterUid;
+            const isRM = !isVsSystem && uid === game.rulemasterUid;
             return (
               <div key={uid} style={{
                 padding: '3px 8px', borderRadius: 6,
@@ -540,7 +544,7 @@ export default function GameScreen() {
       )}
 
       {/* Player hand */}
-      {(!isRulemaster || isSolo) && game.phase === 'playing' && (
+      {(!isRulemaster || isSolo || isVsSystem) && game.phase === 'playing' && (
         <Panel style={{ width: '100%', maxWidth: 480, padding: '12px 16px' }}>
           <div style={{ fontSize: '0.7rem', color: 'rgba(200,168,75,0.5)', fontFamily: "'Cinzel', serif", marginBottom: 10 }}>
             ไพ่ในมือคุณ ({myHand.length} ใบ)
@@ -580,7 +584,7 @@ export default function GameScreen() {
                 ส่งมือให้ตรวจแล้ว
               </div>
               <div style={{ fontSize: '0.72rem', color: 'rgba(200,168,75,0.55)' }}>
-                รอคนคุมกฎตรวจสอบ — ห้ามวางไพ่ระหว่างนี้
+                {isVsSystem ? 'ระบบกำลังตรวจสอบ...' : 'รอคนคุมกฎตรวจสอบ — ห้ามวางไพ่ระหว่างนี้'}
               </div>
             </div>
           ) : myTurn ? (
