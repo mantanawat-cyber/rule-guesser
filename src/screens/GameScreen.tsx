@@ -258,6 +258,26 @@ export default function GameScreen() {
         return;
       }
       const n = myHand.length;
+
+      // Last card and truly stuck → go to guess phase directly
+      if (n <= 1) {
+        const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+        const myIdx = nonRM.indexOf(myUid);
+        const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
+        try {
+          await updateGameState(roomId!, {
+            stuckCheck: null,
+            phase: 'guess',
+            guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
+            discardPile: [...(game.discardPile ?? []), ...myHand.map(c => c.id)],
+            players: { ...game.players, [myUid]: { ...game.players[myUid], hand: [] } },
+          });
+        } catch (e) {
+          flash('เกิดข้อผิดพลาด: ' + String(e));
+        }
+        return;
+      }
+
       const drawCount = Math.min(game.drawPile.length, Math.max(1, n - 1));
       const newCards = (game.drawPile ?? []).slice(0, drawCount);
       const newDraw = (game.drawPile ?? []).slice(drawCount);
@@ -287,17 +307,39 @@ export default function GameScreen() {
     if (!check) return;
     const snapshot = check.handSnapshot;
     const n = snapshot.length;
+    const uid = check.requesterUid;
+
+    // Last card and truly stuck → go to guess phase directly
+    if (n <= 1) {
+      const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+      const myIdx = nonRM.indexOf(uid);
+      const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
+      try {
+        await updateGameState(roomId!, {
+          stuckCheck: null,
+          phase: 'guess',
+          guessPhase: { triggeredBy: uid, order, currentGuesser: order[0], results: {} },
+          discardPile: [...(game.discardPile ?? []), ...snapshot],
+          players: { ...game.players, [uid]: { ...game.players[uid], hand: [] } },
+        });
+      } catch (e) {
+        flash('เกิดข้อผิดพลาด: ' + String(e));
+      }
+      setStuckValidPick(null);
+      return;
+    }
+
     const drawCount = Math.min(game.drawPile.length, Math.max(1, n - 1));
     const newCards = (game.drawPile ?? []).slice(0, drawCount);
     const newDraw = (game.drawPile ?? []).slice(drawCount);
-    const nextTurn = getNextTurnOrder({ ...game, currentTurn: check.requesterUid })[0] ?? null;
+    const nextTurn = getNextTurnOrder({ ...game, currentTurn: uid })[0] ?? null;
     try {
       await updateGameState(roomId!, {
         stuckCheck: null,
         drawPile: newDraw,
         discardPile: [...(game.discardPile ?? []), ...snapshot],
         currentTurn: nextTurn,
-        players: { ...game.players, [check.requesterUid]: { ...game.players[check.requesterUid], hand: newCards } },
+        players: { ...game.players, [uid]: { ...game.players[uid], hand: newCards } },
       });
     } catch (e) {
       flash('เกิดข้อผิดพลาด: ' + String(e));
