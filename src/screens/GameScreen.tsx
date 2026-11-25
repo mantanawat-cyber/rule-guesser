@@ -277,6 +277,77 @@ export default function GameScreen() {
     </Screen>
   );
 
+  async function handleLeaveGame() {
+    if (!game || !myUid) { dispatch({ type: 'GO_HOME' }); return; }
+    if (game.phase === 'gameOver' || game.phase === 'lobby') { dispatch({ type: 'GO_HOME' }); return; }
+
+    try {
+      const remainingPlayers = Object.fromEntries(
+        Object.entries(game.players).filter(([uid]) => uid !== myUid)
+      );
+      const remainingUids = Object.keys(remainingPlayers);
+      const updates: Partial<GameState> = { players: remainingPlayers };
+
+      // Transfer host
+      if (game.hostUid === myUid && remainingUids.length > 0) {
+        updates.hostUid = remainingUids[0];
+      }
+
+      // End game: no players left
+      if (remainingUids.length === 0) {
+        updates.phase = 'gameOver';
+        updates.winnerUid = null;
+      }
+      // End game: I'm the human rulemaster — nobody left to arbiter
+      else if (!isVsSystem && !isSolo && game.rulemasterUid === myUid) {
+        updates.phase = 'gameOver';
+        updates.winnerUid = null;
+      }
+      // End game: I'm the last player (rulemaster stays but has nobody to play with)
+      else if (remainingUids.filter(u => u !== game.rulemasterUid).length === 0) {
+        updates.phase = 'gameOver';
+        updates.winnerUid = null;
+      }
+      else {
+        // Advance turn if it's mine
+        if (game.currentTurn === myUid) {
+          const all = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+          const idx = all.indexOf(myUid);
+          const next = [...all.slice(idx + 1), ...all.slice(0, idx)]
+            .find(u => u !== myUid && remainingPlayers[u]);
+          updates.currentTurn = next ?? null;
+        }
+
+        // Clear stuck check if I'm involved
+        if (game.stuckCheck?.requesterUid === myUid || (isRulemaster && game.stuckCheck)) {
+          updates.stuckCheck = null;
+        }
+
+        // Guess phase: skip me if it's my turn to guess
+        if (game.phase === 'guess' && game.guessPhase) {
+          const gp = game.guessPhase;
+          if (gp.currentGuesser === myUid) {
+            const nextGuessers = gp.order.filter(u => u !== myUid && !gp.results[u] && remainingPlayers[u]);
+            if (nextGuessers.length === 0) {
+              updates.phase = 'gameOver';
+              updates.winnerUid = null;
+            } else {
+              updates.guessPhase = { ...gp, order: gp.order.filter(u => u !== myUid), currentGuesser: nextGuessers[0] };
+            }
+          } else {
+            updates.guessPhase = { ...gp, order: gp.order.filter(u => u !== myUid) };
+          }
+        }
+      }
+
+      await updateGameState(roomId!, updates);
+    } catch {
+      // Firebase failed — still leave locally
+    }
+
+    dispatch({ type: 'GO_HOME' });
+  }
+
   async function handlePlayAgain() {
     if (!game || !myUid || myUid !== game.hostUid) return;
     const playerNames: Record<string, string> = {};
@@ -630,7 +701,7 @@ export default function GameScreen() {
         </Panel>
       )}
 
-      <Btn variant="ghost" onClick={() => dispatch({ type: 'GO_HOME' })} style={{ fontSize: '0.75rem', marginTop: 4 }}>
+      <Btn variant="ghost" onClick={handleLeaveGame} style={{ fontSize: '0.75rem', marginTop: 4 }}>
         ออกจากเกม
       </Btn>
     </Screen>
