@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Screen, Btn, Panel } from '../components/Layout';
 import CardComponent from '../components/CardComponent';
 import { useGame } from '../store/GameContext';
-import { listenRoom, updateGameState } from '../firebase/room';
+import { listenRoom, updateGameState, startGame } from '../firebase/room';
 import { CARD_MAP } from '../data/cards';
 import { RULE_MAP } from '../data/rules';
-import { checkCardValid } from '../game/engine';
+import { checkCardValid, buildInitialGameState, pickRandomRule } from '../game/engine';
 import { ALL_RULES } from '../data/rules';
 import type { Card, GameState } from '../types';
 
@@ -277,7 +277,28 @@ export default function GameScreen() {
     </Screen>
   );
 
-  if (game.phase === 'gameOver') return <GameOverScreen game={game} myUid={myUid!} onHome={() => dispatch({ type: 'GO_HOME' })} />;
+  async function handlePlayAgain() {
+    if (!game || !myUid || myUid !== game.hostUid) return;
+    const playerNames: Record<string, string> = {};
+    Object.entries(game.players).forEach(([uid, p]) => { playerNames[uid] = p.name; });
+    const rule = pickRandomRule();
+    const opts = game.rulemasterUid === 'system' ? { systemRulemaster: true } : {};
+    const newGame = buildInitialGameState(game.hostUid, game.roomCode, playerNames, rule.id, opts);
+    try {
+      await startGame(roomId!, newGame);
+    } catch (e) {
+      flash('เกิดข้อผิดพลาด: ' + String(e));
+    }
+  }
+
+  if (game.phase === 'gameOver') return (
+    <GameOverScreen
+      game={game}
+      myUid={myUid!}
+      onHome={() => dispatch({ type: 'GO_HOME' })}
+      onPlayAgain={myUid === game.hostUid ? handlePlayAgain : undefined}
+    />
+  );
 
   return (
     <Screen style={{ gap: 12, paddingTop: 'max(12px, env(safe-area-inset-top,0px))' }}>
@@ -733,17 +754,24 @@ function StuckCheckPanel({
   );
 }
 
-function GameOverScreen({ game, myUid, onHome }: { game: GameState; myUid: string; onHome: () => void }) {
+function GameOverScreen({ game, myUid, onHome, onPlayAgain }: {
+  game: GameState;
+  myUid: string;
+  onHome: () => void;
+  onPlayAgain?: () => void;
+}) {
   const winner = game.winnerUid ? game.players[game.winnerUid]?.name : null;
   const rule = game.ruleId ? RULE_MAP[game.ruleId] : null;
   const isWinner = game.winnerUid === myUid;
+  const isHost = myUid === game.hostUid;
 
   return (
     <Screen style={{ justifyContent: 'center' }}>
-      <Panel style={{ textAlign: 'center' }}>
+      <Panel style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
         <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '1.6rem', marginBottom: 8, color: '#c8a84b' }}>
           {winner ? (isWinner ? '🏆 คุณชนะ!' : `${winner} ชนะ!`) : '🤝 ไม่มีผู้ชนะ'}
         </div>
+
         {rule && (
           <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(200,168,75,0.08)', borderRadius: 8, border: '1px solid rgba(200,168,75,0.3)' }}>
             <div style={{ fontSize: '0.75rem', color: 'rgba(200,168,75,0.6)', marginBottom: 4, fontFamily: "'Cinzel', serif" }}>
@@ -752,8 +780,21 @@ function GameOverScreen({ game, myUid, onHome }: { game: GameState; myUid: strin
             <div style={{ color: '#e8dcc0', fontWeight: 600 }}>{rule.nameTH}</div>
           </div>
         )}
-        <div style={{ marginTop: 20 }}>
-          <Btn variant="primary" onClick={onHome}>กลับหน้าหลัก</Btn>
+
+        <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {onPlayAgain && (
+            <Btn variant="primary" fullWidth onClick={onPlayAgain}>
+              🔄 เล่นอีกรอบ
+            </Btn>
+          )}
+          {!isHost && (
+            <div style={{ fontSize: '0.78rem', color: 'rgba(200,168,75,0.45)', padding: '8px 0' }}>
+              รอ host เริ่มรอบใหม่...
+            </div>
+          )}
+          <Btn variant="ghost" fullWidth onClick={onHome}>
+            ออกจากห้อง
+          </Btn>
         </div>
       </Panel>
     </Screen>
