@@ -156,6 +156,7 @@ export default function GameScreen() {
   const [stuckValidPick, setStuckValidPick] = useState<string | null>(null);
   const [playingCard, setPlayingCard] = useState<string | null>(null);
   const [showBgPass, setShowBgPass] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const [showTurnBanner, setShowTurnBanner] = useState(false);
   const [showRedFlash, setShowRedFlash] = useState(false);
@@ -566,10 +567,11 @@ export default function GameScreen() {
           className={toastExiting ? 'rg-toast-exit' : 'rg-toast-enter'}
           style={{
             position: 'fixed',
-            bottom: 'max(32px, env(safe-area-inset-bottom, 0px))',
+            top: 'max(60px, env(safe-area-inset-top, 0px))',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 100,
+            pointerEvents: 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -978,9 +980,20 @@ export default function GameScreen() {
         </Panel>
       )}
 
-      <Btn variant="ghost" onClick={handleLeaveGame} style={{ fontSize: '0.75rem', marginTop: 4 }}>
-        ออกจากเกม
-      </Btn>
+      {confirmLeave ? (
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <Btn variant="danger" onClick={handleLeaveGame} style={{ fontSize: '0.75rem' }}>
+            ✓ ออกเลย
+          </Btn>
+          <Btn variant="ghost" onClick={() => setConfirmLeave(false)} style={{ fontSize: '0.75rem' }}>
+            ✕ ยกเลิก
+          </Btn>
+        </div>
+      ) : (
+        <Btn variant="ghost" onClick={() => setConfirmLeave(true)} style={{ fontSize: '0.75rem', marginTop: 4, opacity: 0.55 }}>
+          ออกจากเกม
+        </Btn>
+      )}
     </Screen>
   );
 }
