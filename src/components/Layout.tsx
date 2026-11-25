@@ -18,7 +18,7 @@ export function Screen({ children, style }: { children: ReactNode; style?: CSSPr
       {/* Golden top glow — matches cover screen, pure CSS */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: '35vh',
-        background: 'radial-gradient(ellipse 70% 100% at 50% 0%, rgba(200,168,75,.055) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse 70% 100% at 50% 0%, rgba(220,150,40,.07) 0%, transparent 70%)',
         pointerEvents: 'none', zIndex: 0,
       }} />
       {children}
@@ -31,12 +31,12 @@ export function Panel({ children, style }: { children: ReactNode; style?: CSSPro
     <div style={{
       width: '100%',
       maxWidth: 480,
-      background: 'rgba(26,34,64,0.9)',
-      border: '1px solid rgba(180,150,60,0.4)',
+      background: 'rgba(28,8,6,0.88)',
+      border: '1px solid rgba(200,140,40,0.4)',
       borderRadius: 16,
       padding: '20px 20px',
-      backdropFilter: 'blur(8px)',
-      boxShadow: '0 0 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(200,168,75,0.15)',
+      backdropFilter: 'blur(10px)',
+      boxShadow: '0 0 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(210,160,60,0.18)',
       ...style,
     }}>
       {children}

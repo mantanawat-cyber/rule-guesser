@@ -1102,6 +1102,7 @@ function StuckCheckPanel({
   );
 }
 
+const EMBER_COLORS = ['rgba(255,160,40,0.55)', 'rgba(255,100,20,0.45)', 'rgba(255,210,80,0.5)'];
 const AMBIENT_PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   id: i,
   left: (i * 8.5 + Math.sin(i * 1.3) * 10 + 50) % 100,
@@ -1110,6 +1111,7 @@ const AMBIENT_PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   delay: -(i * 2.3) % 20,
   size: 2 + (i % 3),
   drift: `${((i % 2 === 0 ? 1 : -1) * (8 + (i % 12)))}px`,
+  color: EMBER_COLORS[i % 3],
 }));
 
 function AmbientParticles() {
@@ -1121,7 +1123,7 @@ function AmbientParticles() {
           left: `${p.left}%`, bottom: `${p.bottom}%`,
           width: p.size, height: p.size,
           borderRadius: '50%',
-          background: 'rgba(200,168,75,0.5)',
+          background: p.color,
           '--drift': p.drift,
           willChange: 'transform',
           animation: `rg-particle-float ${p.duration}s ${p.delay}s linear infinite`,
