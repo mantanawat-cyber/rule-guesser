@@ -58,9 +58,41 @@ const ANIM_STYLES = `
   from { transform: translateY(0)    scale(1);    opacity: 1; }
   to   { transform: translateY(60px) scale(0.9);  opacity: 0; }
 }
-.rg-shake { animation: rg-shake 0.5s ease-in-out; }
+@keyframes rg-turn-banner {
+  0%   { transform: translateY(-70px) scale(0.9); opacity: 0; }
+  18%  { transform: translateY(0)     scale(1.04); opacity: 1; }
+  25%  { transform: translateY(0)     scale(1);    opacity: 1; }
+  80%  { transform: translateY(0)     scale(1);    opacity: 1; }
+  100% { transform: translateY(-70px) scale(0.9);  opacity: 0; }
+}
+@keyframes rg-red-flash {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+@keyframes rg-pass-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  30%  { box-shadow: 0 0 22px 8px rgba(34,197,94,0.75); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+@keyframes rg-guess-entry {
+  0%   { transform: scale(0.7); opacity: 0; }
+  25%  { transform: scale(1.06); opacity: 1; }
+  65%  { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+@keyframes rg-confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
+@keyframes rg-winner-glow {
+  0%,100% { text-shadow: 0 0 10px rgba(200,168,75,0.4); }
+  50%     { text-shadow: 0 0 30px rgba(200,168,75,0.9), 0 0 60px rgba(200,168,75,0.4); }
+}
+.rg-shake       { animation: rg-shake 0.5s ease-in-out; }
 .rg-toast-enter { animation: rg-toast-in  0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 .rg-toast-exit  { animation: rg-toast-out 0.25s ease-in forwards; }
+.rg-pass-glow   { animation: rg-pass-glow 0.7s ease-out forwards; }
+.rg-winner-glow { animation: rg-winner-glow 2s ease-in-out infinite; }
 `;
 
 export default function GameScreen() {
@@ -72,6 +104,14 @@ export default function GameScreen() {
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stuckValidPick, setStuckValidPick] = useState<string | null>(null);
+
+  const [showTurnBanner, setShowTurnBanner] = useState(false);
+  const [showRedFlash, setShowRedFlash] = useState(false);
+  const [showGuessEntry, setShowGuessEntry] = useState(false);
+  const [passFlash, setPassFlash] = useState(false);
+  const prevTurnRef = useRef<string | null | undefined>(undefined);
+  const prevPhaseRef = useRef<string | undefined>(undefined);
+  const prevPassedLenRef = useRef<number>(0);
 
   const { roomId, myUid } = state;
   const isVsSystem = game?.rulemasterUid === 'system';
@@ -91,6 +131,42 @@ export default function GameScreen() {
     });
   }, [roomId]);
 
+  useEffect(() => {
+    if (!game || !myUid) return;
+
+    // Turn banner: show when turn first comes to me
+    if (prevTurnRef.current !== undefined && game.currentTurn === myUid && prevTurnRef.current !== myUid) {
+      setShowTurnBanner(true);
+      const t = setTimeout(() => setShowTurnBanner(false), 2000);
+      return () => clearTimeout(t);
+    }
+    prevTurnRef.current = game.currentTurn;
+  }, [game?.currentTurn]);
+
+  useEffect(() => {
+    if (!game) return;
+
+    // Guess phase entry overlay
+    if (prevPhaseRef.current === 'playing' && game.phase === 'guess') {
+      setShowGuessEntry(true);
+      const t = setTimeout(() => setShowGuessEntry(false), 2200);
+      return () => clearTimeout(t);
+    }
+    prevPhaseRef.current = game.phase;
+  }, [game?.phase]);
+
+  useEffect(() => {
+    if (!game) return;
+    const len = game.passedPile?.length ?? 0;
+    if (prevPassedLenRef.current > 0 && len > prevPassedLenRef.current) {
+      setPassFlash(true);
+      const t = setTimeout(() => setPassFlash(false), 700);
+      prevPassedLenRef.current = len;
+      return () => clearTimeout(t);
+    }
+    prevPassedLenRef.current = len;
+  }, [game?.passedPile?.length]);
+
   function flash(m: string) {
     setMsg(m);
     setTimeout(() => setMsg(''), 2500);
@@ -100,6 +176,8 @@ export default function GameScreen() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToastExiting(false);
     setRejectedCard(card);
+    setShowRedFlash(true);
+    setTimeout(() => setShowRedFlash(false), 450);
     toastTimer.current = setTimeout(() => {
       setToastExiting(true);
       toastTimer.current = setTimeout(() => setRejectedCard(null), 300);
@@ -439,6 +517,56 @@ export default function GameScreen() {
         </div>
       )}
 
+      {/* Red flash overlay on fail */}
+      {showRedFlash && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 50, pointerEvents: 'none',
+          background: 'rgba(180,20,20,0.45)',
+          animation: 'rg-red-flash 0.45s ease-out forwards',
+        }} />
+      )}
+
+      {/* Guess phase entry overlay */}
+      {showGuessEntry && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 80, pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(5,5,15,0.6)',
+          backdropFilter: 'blur(3px)',
+        }}>
+          <div style={{
+            fontFamily: "'Cinzel Decorative', serif",
+            fontSize: '2rem', color: '#c8a84b', textAlign: 'center',
+            textShadow: '0 0 30px rgba(200,168,75,0.8)',
+            animation: 'rg-guess-entry 2.2s ease-out forwards',
+          }}>
+            ⚔<br />เวลาทาย!
+          </div>
+        </div>
+      )}
+
+      {/* Turn banner */}
+      {showTurnBanner && (
+        <div style={{
+          position: 'fixed', top: 'max(14px, env(safe-area-inset-top,0px))',
+          left: '50%', transform: 'translateX(-50%)',
+          zIndex: 60, pointerEvents: 'none',
+          background: 'rgba(10,14,26,0.92)',
+          border: '1.5px solid rgba(200,168,75,0.7)',
+          borderRadius: 12, padding: '10px 24px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 24px rgba(200,168,75,0.3)',
+          animation: 'rg-turn-banner 2s cubic-bezier(0.34,1.4,0.64,1) forwards',
+          whiteSpace: 'nowrap',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span style={{ fontSize: '1.1rem' }}>⚡</span>
+          <span style={{ fontFamily: "'Cinzel', serif", fontSize: '0.9rem', color: '#c8a84b', fontWeight: 700, letterSpacing: '0.08em' }}>
+            เทิร์นของคุณ!
+          </span>
+        </div>
+      )}
+
       {/* Top bar */}
       <div style={{ width: '100%', maxWidth: 480, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.75rem', color: 'rgba(200,168,75,0.6)', letterSpacing: '0.1em' }}>
@@ -497,7 +625,7 @@ export default function GameScreen() {
                     const isFail = entry.result === 'fail';
                     const playerName = game.players[entry.uid]?.name ?? '?';
                     return (
-                      <div key={`${entry.cardId}-${idx}`} style={{ position: 'relative', flexShrink: 0 }}>
+                      <div key={`${entry.cardId}-${idx}`} style={{ position: 'relative', flexShrink: 0 }} className={isLatest && passFlash && !isFail ? 'rg-pass-glow' : undefined}>
                         {/* Result badge */}
                         <div style={{
                           position: 'absolute', top: -8, left: '50%',
@@ -825,6 +953,34 @@ function StuckCheckPanel({
   );
 }
 
+function Confetti() {
+  const particles = Array.from({ length: 65 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 1.8,
+    duration: 2.2 + Math.random() * 1.8,
+    color: ['#c8a84b','#22c55e','#3b82f6','#f59e0b','#ec4899','#a855f7','#ef4444'][i % 7],
+    size: 7 + Math.random() * 7,
+    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+    rotate: Math.random() * 360,
+  }));
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 150, overflow: 'hidden' }}>
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position: 'absolute',
+          left: `${p.left}%`, top: -16,
+          width: p.size, height: p.size,
+          background: p.color,
+          borderRadius: p.borderRadius,
+          transform: `rotate(${p.rotate}deg)`,
+          animation: `rg-confetti-fall ${p.duration}s ${p.delay}s ease-in forwards`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
 function GameOverScreen({ game, myUid, onHome, onPlayAgain }: {
   game: GameState;
   myUid: string;
@@ -838,8 +994,9 @@ function GameOverScreen({ game, myUid, onHome, onPlayAgain }: {
 
   return (
     <Screen style={{ justifyContent: 'center' }}>
+      {isWinner && <Confetti />}
       <Panel style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
-        <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '1.6rem', marginBottom: 8, color: '#c8a84b' }}>
+        <div className={isWinner ? 'rg-winner-glow' : undefined} style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '1.6rem', marginBottom: 8, color: '#c8a84b' }}>
           {winner ? (isWinner ? '🏆 คุณชนะ!' : `${winner} ชนะ!`) : '🤝 ไม่มีผู้ชนะ'}
         </div>
 
