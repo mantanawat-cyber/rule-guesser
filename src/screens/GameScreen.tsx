@@ -264,6 +264,7 @@ export default function GameScreen() {
         await updateGameState(roomId!, {
           playLog: newLog,
           currentTurn: nextTurn,
+          failedPile: [...(game.failedPile ?? []), cardId],
         });
       }
     } catch (e) {
