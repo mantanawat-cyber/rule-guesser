@@ -859,18 +859,28 @@ export default function GameScreen() {
         </div>
       </Panel>
 
-      {/* Flash message (draw pile empty etc.) */}
+      {/* Flash message — fixed overlay, no layout shift */}
       {msg && (
         <div style={{
+          position: 'fixed',
+          top: 'max(60px, env(safe-area-inset-top, 0px))',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 90,
+          pointerEvents: 'none',
           padding: '10px 20px',
-          background: 'rgba(10,10,20,0.85)',
+          background: 'rgba(14,8,4,0.92)',
           borderRadius: 10,
-          border: '1px solid rgba(200,168,75,0.35)',
+          border: '1px solid rgba(200,168,75,0.45)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(8px)',
           fontSize: '0.85rem',
           textAlign: 'center',
-          color: 'rgba(232,220,192,0.8)',
+          color: 'rgba(232,220,192,0.9)',
           fontFamily: "'Cinzel', serif",
           letterSpacing: '0.04em',
+          whiteSpace: 'nowrap',
+          animation: 'rg-toast-in 0.2s ease-out',
         }}>
           {msg}
         </div>
