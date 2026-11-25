@@ -98,6 +98,24 @@ const ANIM_STYLES = `
   0%,100% { box-shadow: 0 0 0 0 rgba(200,168,75,0); }
   50%     { box-shadow: 0 0 10px 3px rgba(200,168,75,0.35); }
 }
+@keyframes rg-bg-pass-ring {
+  0%   { transform: translate(-50%,-50%) scale(0.1); opacity: 0.7; }
+  65%  { opacity: 0.2; }
+  100% { transform: translate(-50%,-50%) scale(5);   opacity: 0; }
+}
+@keyframes rg-bg-pass-glow {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes rg-bg-spark {
+  0%   { transform: rotate(var(--sa)) translateX(0)     scale(1.2); opacity: 1; }
+  100% { transform: rotate(var(--sa)) translateX(140px) scale(0);   opacity: 0; }
+}
+@keyframes rg-bg-fail-vignette {
+  0%   { opacity: 0.7; }
+  100% { opacity: 0; }
+}
 @keyframes rg-card-play-out {
   0%   { transform: translateY(-12px) scale(1.08); opacity: 1; }
   45%  { transform: translateY(-55px) scale(0.9);  opacity: 0.7; }
@@ -137,6 +155,7 @@ export default function GameScreen() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stuckValidPick, setStuckValidPick] = useState<string | null>(null);
   const [playingCard, setPlayingCard] = useState<string | null>(null);
+  const [showBgPass, setShowBgPass] = useState(false);
 
   const [showTurnBanner, setShowTurnBanner] = useState(false);
   const [showRedFlash, setShowRedFlash] = useState(false);
@@ -237,8 +256,10 @@ export default function GameScreen() {
     if (valid) {
       setPlayingCard(cardId);
       setSelected(null);
+      setShowBgPass(true);
       await new Promise(r => setTimeout(r, 300));
       setPlayingCard(null);
+      setTimeout(() => setShowBgPass(false), 750);
     }
 
     try {
@@ -605,12 +626,42 @@ export default function GameScreen() {
 
       <AmbientParticles />
 
-      {/* Red flash overlay on fail */}
+      {/* Pass bg effect: golden ripple ring + sparkles */}
+      {showBgPass && (
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 5, overflow: 'hidden' }}>
+          {/* Full-screen golden glow */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(200,168,75,0.1) 0%, transparent 70%)',
+            animation: 'rg-bg-pass-glow 0.75s ease-out forwards',
+          }} />
+          {/* Expanding ring */}
+          <div style={{
+            position: 'absolute', top: '48%', left: '50%',
+            width: 200, height: 200, borderRadius: '50%',
+            border: '2px solid rgba(200,168,75,0.6)',
+            boxShadow: '0 0 18px rgba(200,168,75,0.35), inset 0 0 18px rgba(200,168,75,0.15)',
+            animation: 'rg-bg-pass-ring 0.75s cubic-bezier(0.2,0.8,0.4,1) forwards',
+          }} />
+          {/* Sparkles */}
+          {[0,45,90,135,180,225,270,315].map(deg => (
+            <div key={deg} style={{
+              position: 'absolute', top: '48%', left: '50%',
+              width: 5, height: 5, borderRadius: '50%',
+              background: deg % 90 === 0 ? '#f0d87a' : 'rgba(200,168,75,0.7)',
+              '--sa': `${deg}deg`,
+              animation: `rg-bg-spark ${0.55 + (deg % 90 === 0 ? 0.1 : 0)}s ${deg * 0.001}s cubic-bezier(0.2,0.8,0.4,1) forwards`,
+            } as React.CSSProperties} />
+          ))}
+        </div>
+      )}
+
+      {/* Red flash / vignette on fail */}
       {showRedFlash && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 50, pointerEvents: 'none',
-          background: 'rgba(180,20,20,0.45)',
-          animation: 'rg-red-flash 0.45s ease-out forwards',
+          background: 'radial-gradient(ellipse 100% 100% at 50% 50%, rgba(140,10,10,0.1) 30%, rgba(180,20,20,0.6) 100%)',
+          animation: 'rg-bg-fail-vignette 0.5s ease-out forwards',
         }} />
       )}
 
