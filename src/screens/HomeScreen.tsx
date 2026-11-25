@@ -92,31 +92,33 @@ export default function HomeScreen() {
     window.addEventListener('resize', resize);
 
     const ctx = cv.getContext('2d')!;
-    const stars = Array.from({ length: 130 }, () => ({
+    const EMBER_RGB = ['255,160,40', '255,100,20', '255,210,80', '240,80,10'];
+    const embers = Array.from({ length: 80 }, () => ({
       x: Math.random(), y: Math.random(),
-      r: (0.4 + Math.random() * 1.1) * dpr,
-      a: 0.2 + Math.random() * 0.55,
-      sp: 1.5 + Math.random() * 3,
+      r: (0.5 + Math.random() * 1.4) * dpr,
+      a: 0.15 + Math.random() * 0.5,
+      sp: 1.2 + Math.random() * 2.8,
       off: Math.random() * Math.PI * 2,
+      col: EMBER_RGB[Math.floor(Math.random() * EMBER_RGB.length)],
     }));
     const rays = Array.from({ length: 12 }, (_, i) => ({
       angle: (i / 12) * Math.PI * 2,
       width: 0.01 + Math.random() * 0.022,
-      alpha: 0.04 + Math.random() * 0.055,
+      alpha: 0.03 + Math.random() * 0.045,
     }));
 
     let t = 0;
     function draw() {
       const W = cv!.width, H = cv!.height;
       ctx.clearRect(0, 0, W, H);
-      stars.forEach(s => {
+      embers.forEach(s => {
         const tw = 0.5 + 0.5 * Math.sin(t * s.sp * 0.02 + s.off);
         ctx.beginPath();
         ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(232,220,192,${s.a * tw})`;
+        ctx.fillStyle = `rgba(${s.col},${s.a * tw})`;
         ctx.fill();
       });
-      const cx = W * 0.5, cy = H * 0.3;
+      const cx = W * 0.5, cy = H * 0.28;
       const len = Math.hypot(W, H);
       const rot = t * 0.003;
       rays.forEach(r => {
@@ -125,9 +127,9 @@ export default function HomeScreen() {
         ctx.translate(cx, cy);
         ctx.rotate(a);
         const grad = ctx.createLinearGradient(0, 0, len, 0);
-        grad.addColorStop(0,   `rgba(200,168,75,${r.alpha})`);
-        grad.addColorStop(0.4, `rgba(200,168,75,${r.alpha * 0.4})`);
-        grad.addColorStop(1,   'rgba(200,168,75,0)');
+        grad.addColorStop(0,   `rgba(220,140,30,${r.alpha})`);
+        grad.addColorStop(0.4, `rgba(200,100,20,${r.alpha * 0.4})`);
+        grad.addColorStop(1,   'rgba(180,60,10,0)');
         ctx.beginPath();
         ctx.moveTo(0, -len * r.width);
         ctx.lineTo(len, 0);
@@ -184,7 +186,10 @@ export default function HomeScreen() {
     return (
       <div style={{
         position: 'fixed', inset: 0,
-        background: 'radial-gradient(ellipse 80% 55% at 50% 15%, rgba(200,168,75,.07) 0%, transparent 65%), linear-gradient(180deg,#06091a 0%,#030508 100%)',
+        background: `radial-gradient(ellipse 80% 50% at 50% 0%, rgba(210,140,20,.08) 0%, transparent 55%),
+          linear-gradient(180deg, rgba(8,2,2,0.52) 0%, rgba(5,1,1,0.18) 40%, rgba(12,4,2,0.55) 100%),
+          url('/bg-fire.png') center top / cover no-repeat`,
+        backgroundColor: '#110403',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
         padding: `max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))`,
