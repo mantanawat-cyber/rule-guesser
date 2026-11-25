@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Screen, Btn, Panel } from '../components/Layout';
 import CardComponent from '../components/CardComponent';
 import { useGame } from '../store/GameContext';
@@ -979,27 +979,28 @@ function StuckCheckPanel({
   );
 }
 
+const AMBIENT_PARTICLES = Array.from({ length: 12 }, (_, i) => ({
+  id: i,
+  left: (i * 8.5 + Math.sin(i * 1.3) * 10 + 50) % 100,
+  bottom: (i * 8.3) % 100,
+  duration: 16 + (i * 2.1) % 10,
+  delay: -(i * 2.3) % 20,
+  size: 2 + (i % 3),
+  drift: `${((i % 2 === 0 ? 1 : -1) * (8 + (i % 12)))}px`,
+}));
+
 function AmbientParticles() {
-  const particles = Array.from({ length: 28 }, (_, i) => ({
-    id: i,
-    left: (i * 3.7 + Math.sin(i * 1.3) * 15 + 50) % 100,
-    bottom: (i * 7.1) % 100,
-    duration: 14 + (i * 2.3) % 12,
-    delay: -(i * 1.9) % 18,
-    size: 2 + (i % 3),
-    drift: `${((i % 2 === 0 ? 1 : -1) * (8 + (i % 15)))}px`,
-    opacity: 0.15 + (i % 4) * 0.07,
-  }));
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-      {particles.map(p => (
+      {AMBIENT_PARTICLES.map(p => (
         <div key={p.id} style={{
           position: 'absolute',
           left: `${p.left}%`, bottom: `${p.bottom}%`,
           width: p.size, height: p.size,
           borderRadius: '50%',
-          background: 'rgba(200,168,75,0.6)',
+          background: 'rgba(200,168,75,0.5)',
           '--drift': p.drift,
+          willChange: 'transform',
           animation: `rg-particle-float ${p.duration}s ${p.delay}s linear infinite`,
         } as React.CSSProperties} />
       ))}
@@ -1008,16 +1009,16 @@ function AmbientParticles() {
 }
 
 function Confetti() {
-  const particles = Array.from({ length: 65 }, (_, i) => ({
+  const particles = useMemo(() => Array.from({ length: 50 }, (_, i) => ({
     id: i,
-    left: Math.random() * 100,
-    delay: Math.random() * 1.8,
-    duration: 2.2 + Math.random() * 1.8,
+    left: (i * 2.1 + 1) % 100,
+    delay: (i * 0.038) % 1.8,
+    duration: 2.2 + (i * 0.037) % 1.8,
     color: ['#c8a84b','#22c55e','#3b82f6','#f59e0b','#ec4899','#a855f7','#ef4444'][i % 7],
-    size: 7 + Math.random() * 7,
-    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-    rotate: Math.random() * 360,
-  }));
+    size: 7 + (i % 7),
+    borderRadius: i % 2 === 0 ? '50%' : '2px',
+    rotate: (i * 7.3) % 360,
+  })), []);
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 150, overflow: 'hidden' }}>
       {particles.map(p => (

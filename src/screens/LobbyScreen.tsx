@@ -11,7 +11,7 @@ export default function LobbyScreen() {
   const { state, dispatch } = useGame();
   const [roomData, setRoomData] = useState<GameState | null>(null);
   const [copied, setCopied] = useState(false);
-  const [gameMode, setGameMode] = useState<GameMode>('vs_system');
+  const [gameMode, setGameMode] = useState<GameMode>('practice');
 
   const { roomId, myUid, roomCode } = state;
   const isHost = roomData?.hostUid === myUid;
