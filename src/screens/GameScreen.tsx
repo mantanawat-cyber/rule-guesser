@@ -132,7 +132,7 @@ export default function GameScreen() {
 
   const { roomId, myUid } = state;
   const isVsSystem = game?.rulemasterUid === 'system';
-  const isSolo = !isVsSystem && game?.rulemasterUid === null;
+  const isSolo = !isVsSystem && !game?.rulemasterUid;
   const isRulemaster = !isSolo && !isVsSystem && game?.rulemasterUid === myUid;
   const canSeeRule = isSolo || isRulemaster;
   const myTurn = game?.currentTurn === myUid;
