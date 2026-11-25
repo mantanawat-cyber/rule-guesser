@@ -54,6 +54,15 @@ const ANIM_STYLES = `
   from { transform: translateY(80px) scale(0.92); opacity: 0; }
   to   { transform: translateY(0)    scale(1);    opacity: 1; }
 }
+@keyframes rg-flash-drop {
+  0%   { transform: translateX(-50%) translateY(-18px) scale(0.94); opacity: 0; }
+  60%  { transform: translateX(-50%) translateY(3px)  scale(1.02); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0)    scale(1);    opacity: 1; }
+}
+@keyframes rg-flash-pulse {
+  0%,100% { box-shadow: 0 0 10px rgba(210,150,30,0.25), 0 4px 20px rgba(0,0,0,0.6); }
+  50%     { box-shadow: 0 0 22px rgba(210,150,30,0.55), 0 4px 24px rgba(0,0,0,0.6); }
+}
 @keyframes rg-toast-out {
   from { transform: translateY(0)    scale(1);    opacity: 1; }
   to   { transform: translateY(60px) scale(0.9);  opacity: 0; }
@@ -863,26 +872,32 @@ export default function GameScreen() {
       {msg && (
         <div style={{
           position: 'fixed',
-          top: 'max(60px, env(safe-area-inset-top, 0px))',
+          top: 'max(64px, env(safe-area-inset-top, 0px))',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 90,
           pointerEvents: 'none',
-          padding: '10px 20px',
-          background: 'rgba(14,8,4,0.92)',
-          borderRadius: 10,
-          border: '1px solid rgba(200,168,75,0.45)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(8px)',
-          fontSize: '0.85rem',
-          textAlign: 'center',
-          color: 'rgba(232,220,192,0.9)',
-          fontFamily: "'Cinzel', serif",
-          letterSpacing: '0.04em',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '11px 22px',
+          background: 'linear-gradient(135deg, rgba(28,10,4,0.96) 0%, rgba(40,16,6,0.96) 100%)',
+          borderRadius: 12,
+          border: '1px solid rgba(210,150,40,0.55)',
+          boxShadow: '0 0 10px rgba(210,150,30,0.25), 0 4px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(220,170,60,0.12)',
+          backdropFilter: 'blur(12px)',
+          animation: 'rg-flash-drop 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards, rg-flash-pulse 1.8s 0.3s ease-in-out infinite',
           whiteSpace: 'nowrap',
-          animation: 'rg-toast-in 0.2s ease-out',
         }}>
-          {msg}
+          <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🔥</span>
+          <span style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            color: '#e8c870',
+            letterSpacing: '0.06em',
+            textShadow: '0 0 10px rgba(210,160,40,0.5)',
+          }}>{msg}</span>
         </div>
       )}
 
