@@ -49,7 +49,6 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
   const cornerEmoji    = `${scale * 0.65}rem`;
   const centerNumSize  = `${scale * 2.6}rem`;
   const bottomThSize   = `${scale * 0.72}rem`;
-  const bottomEnSize   = `${scale * 0.52}rem`;
   const bottomEmoji    = `${scale * 0.75}rem`;
   const cornerPad      = Math.round(scale * 5);
 
