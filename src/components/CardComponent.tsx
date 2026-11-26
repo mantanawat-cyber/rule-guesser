@@ -53,10 +53,6 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
   const bottomEmoji    = `${scale * 0.75}rem`;
   const cornerPad      = Math.round(scale * 5);
 
-  const CATEGORY_EN: Record<string, string> = {
-    animal: 'ANIMAL', food: 'FOOD', nature: 'NATURE',
-  };
-
   return (
     <div
       onClick={onClick}
@@ -143,14 +139,9 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
         {/* left emoji */}
         <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
         {/* center text */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
-          <span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize, color: accent.text, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-            {card.categoryTH}
-          </span>
-          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 400, fontSize: bottomEnSize, color: `${accent.text}bb`, letterSpacing: '0.08em' }}>
-            {CATEGORY_EN[card.category]}
-          </span>
-        </div>
+        <span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize, color: accent.text, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+          {card.categoryTH}
+        </span>
         {/* right emoji */}
         <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
       </div>
