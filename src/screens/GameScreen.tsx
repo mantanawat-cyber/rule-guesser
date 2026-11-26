@@ -321,7 +321,39 @@ export default function GameScreen() {
     if ((isSolo || isVsSystem) && rule) {
       const stuck = !myHand.some(c => checkCardValid(c, passedTopCard, rule));
       if (!stuck) {
-        flash('ยังมีไพ่ที่ลงได้อยู่!');
+        // มีไพ่ที่ลงได้ — ระบบ auto-play 1 ใบ แล้วจั่วใบใหม่มาแทน
+        const validCard = myHand.find(c => checkCardValid(c, passedTopCard, rule))!;
+        const cardId = validCard.id;
+        const newHand = myHand.filter(c => c.id !== cardId).map(c => c.id);
+        const newLog = [...(game.playLog ?? []), { cardId, result: 'pass' as const, uid: myUid }];
+        const newPassed = [...(game.passedPile ?? []), cardId];
+        const replacement = (game.drawPile ?? [])[0];
+        const newDraw = replacement ? (game.drawPile ?? []).slice(1) : (game.drawPile ?? []);
+        const finalHand = replacement ? [...newHand, replacement] : newHand;
+        const nextTurn = getNextTurnOrder(game)[0] ?? null;
+
+        if (finalHand.length === 0) {
+          const nonRM = Object.keys(game.players).filter(u => u !== game.rulemasterUid);
+          const myIdx = nonRM.indexOf(myUid);
+          const order = [...nonRM.slice(myIdx), ...nonRM.slice(0, myIdx)];
+          try {
+            await updateGameState(roomId!, {
+              passedPile: newPassed, playLog: newLog, drawPile: newDraw,
+              phase: 'guess',
+              guessPhase: { triggeredBy: myUid, order, currentGuesser: order[0], results: {} },
+              players: { ...game.players, [myUid]: { ...game.players[myUid], hand: finalHand } },
+            });
+          } catch (e) { flash('เกิดข้อผิดพลาด: ' + String(e)); }
+        } else {
+          try {
+            await updateGameState(roomId!, {
+              passedPile: newPassed, playLog: newLog, drawPile: newDraw,
+              currentTurn: nextTurn,
+              players: { ...game.players, [myUid]: { ...game.players[myUid], hand: finalHand } },
+            });
+          } catch (e) { flash('เกิดข้อผิดพลาด: ' + String(e)); }
+          flash(`มีไพ่ลงได้! ระบบลง ${validCard.colorTH} ${validCard.number} ให้อัตโนมัติ`);
+        }
         return;
       }
       const n = myHand.length;
