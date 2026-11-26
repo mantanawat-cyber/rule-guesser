@@ -16,6 +16,12 @@ const GLOW: Record<string, string> = {
   yellow: '0 0 16px rgba(234,179,8,0.6)',
 };
 
+const CATEGORY_ACCENT: Record<string, { bg: string; text: string }> = {
+  animal: { bg: 'rgba(255,140,30,0.22)',  text: '#ffb347' },
+  food:   { bg: 'rgba(220,60,120,0.22)',  text: '#ff85c0' },
+  nature: { bg: 'rgba(30,200,180,0.22)',  text: '#4dd9c0' },
+};
+
 const COLOR_HEX: Record<string, string> = {
   red:    '#ef4444',
   blue:   '#3b82f6',
@@ -32,6 +38,7 @@ interface Props {
 }
 
 export default function CardComponent({ card, onClick, selected, size = 'md', dimmed }: Props) {
+  const accent = CATEGORY_ACCENT[card.category] ?? { bg: 'rgba(255,215,0,0.15)', text: '#ffd700' };
   const W = size === 'sm' ? 72 : size === 'lg' ? 108 : 90;
   const H = Math.round(W * (378 / 270));
   const barH = Math.round(H * 0.165);
@@ -130,15 +137,17 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: `0 ${cornerPad}px`,
+        background: accent.bg,
+        borderTop: `1px solid ${accent.text}44`,
       }}>
         {/* left emoji */}
         <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
         {/* center text */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
-          <span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize, color: '#ffd700', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+          <span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize, color: accent.text, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
             {card.categoryTH}
           </span>
-          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 400, fontSize: bottomEnSize, color: 'rgba(255,215,0,0.7)', letterSpacing: '0.08em' }}>
+          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 400, fontSize: bottomEnSize, color: `${accent.text}bb`, letterSpacing: '0.08em' }}>
             {CATEGORY_EN[card.category]}
           </span>
         </div>

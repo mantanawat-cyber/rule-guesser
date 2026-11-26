@@ -8,9 +8,9 @@ const COLOR_META: Record<CardColor, { th: string; hex: string }> = {
 };
 
 const CATEGORY_META: Record<CardCategory, { th: string; emoji: string }> = {
-  animal: { th: 'สัตว์',   emoji: '🐱' },
-  food:   { th: 'อาหาร',  emoji: '🍎' },
-  nature: { th: 'ธรรมชาติ', emoji: '🌿' },
+  animal: { th: 'สัตว์',   emoji: '🐯' },
+  food:   { th: 'อาหาร',  emoji: '🍕' },
+  nature: { th: 'ธรรมชาติ', emoji: '🌊' },
 };
 
 const COLORS: CardColor[]    = ['red', 'blue', 'green', 'yellow'];

@@ -960,7 +960,7 @@ export default function GameScreen() {
               >
                 <CardComponent
                   card={card}
-                  size="sm"
+                  size="md"
                   selected={selected === card.id}
                   onClick={myTurn ? () => setSelected(selected === card.id ? null : card.id) : undefined}
                   dimmed={!myTurn}
