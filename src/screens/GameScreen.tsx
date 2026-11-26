@@ -144,9 +144,11 @@ const ANIM_STYLES = `
   cursor: pointer;
   will-change: transform;
 }
-.rg-card-hand:hover:not(.rg-card-selected) {
-  transform: translateY(-6px) scale(1.04);
-  filter: brightness(1.1);
+@media (hover: hover) and (pointer: fine) {
+  .rg-card-hand:hover:not(.rg-card-selected) {
+    transform: translateY(-6px) scale(1.04);
+    filter: brightness(1.1);
+  }
 }
 .rg-card-hand.rg-card-selected {
   transform: translateY(-14px) scale(1.07);
