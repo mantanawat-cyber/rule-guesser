@@ -66,8 +66,7 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
         boxShadow: selected
           ? `0 0 0 ${Math.round(scale * 3)}px ${COLOR_HEX[card.color]}, ${GLOW[card.color]}`
           : GLOW[card.color],
-        transform: selected ? 'translateY(-6px) scale(1.05)' : 'none',
-        transition: 'transform 0.15s, box-shadow 0.15s',
+        transition: 'box-shadow 0.15s',
         opacity: dimmed ? 0.4 : 1,
         backgroundImage: `url(${BG_IMAGES[card.color]})`,
         backgroundSize: 'cover',
