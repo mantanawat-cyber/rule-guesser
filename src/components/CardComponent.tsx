@@ -2,11 +2,11 @@ import type { Card } from '../types';
 
 // Place card background images in src/assets/cards/
 // Filenames: bg-red.png, bg-blue.png, bg-green.png, bg-yellow.png
-const BG_IMAGES: Record<string, string> = {
-  red:    new URL('../assets/cards/bg-red.png', import.meta.url).href,
-  blue:   new URL('../assets/cards/bg-blue.png', import.meta.url).href,
-  green:  new URL('../assets/cards/bg-green.png', import.meta.url).href,
-  yellow: new URL('../assets/cards/bg-yellow.png', import.meta.url).href,
+const BG_GRADIENT: Record<string, string> = {
+  red:    'radial-gradient(ellipse at 50% 35%, #8b1a1a 0%, #3d0808 55%, #180303 100%)',
+  blue:   'radial-gradient(ellipse at 50% 35%, #0f2d7a 0%, #071840 55%, #020810 100%)',
+  green:  'radial-gradient(ellipse at 50% 35%, #0f6620 0%, #073d10 55%, #020e04 100%)',
+  yellow: 'radial-gradient(ellipse at 50% 35%, #7a5200 0%, #3d2800 55%, #180f00 100%)',
 };
 
 const GLOW: Record<string, string> = {
@@ -64,13 +64,11 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
         cursor: onClick ? 'pointer' : 'default',
         flexShrink: 0,
         boxShadow: selected
-          ? `0 0 0 ${Math.round(scale * 3)}px ${COLOR_HEX[card.color]}, ${GLOW[card.color]}`
-          : GLOW[card.color],
+          ? `0 0 0 ${Math.round(scale * 3)}px ${COLOR_HEX[card.color]}, ${GLOW[card.color]}, inset 0 0 40px rgba(0,0,0,0.45)`
+          : `${GLOW[card.color]}, inset 0 0 40px rgba(0,0,0,0.45)`,
         transition: 'box-shadow 0.15s',
         opacity: dimmed ? 0.4 : 1,
-        backgroundImage: `url(${BG_IMAGES[card.color]})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        background: BG_GRADIENT[card.color],
         userSelect: 'none',
       }}
     >
