@@ -763,7 +763,7 @@ export default function GameScreen() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 7, alignItems: 'flex-end', minHeight: 144 }}>
+          <div style={{ display: 'flex', gap: 7, alignItems: 'flex-end', minHeight: 128 }}>
             {(() => {
               const log = (game.playLog ?? []).slice(-4);
               const empty = 4 - log.length;
@@ -771,7 +771,7 @@ export default function GameScreen() {
                 <>
                   {Array.from({ length: empty }).map((_, i) => (
                     <div key={`e-${i}`} style={{
-                      width: 90, height: 126, borderRadius: 8,
+                      width: 72, height: 101, borderRadius: 7,
                       border: '1px dashed rgba(200,168,75,0.12)', flexShrink: 0,
                     }} />
                   ))}
@@ -806,7 +806,7 @@ export default function GameScreen() {
                           {isFail ? '✕ ไม่ผ่าน' : '✓ ผ่าน'}
                         </div>
 
-                        <CardComponent card={card} size="md" />
+                        <CardComponent card={card} size="sm" />
 
                         {/* Fail overlay */}
                         {isFail && (

@@ -136,13 +136,18 @@ export default function CardComponent({ card, onClick, selected, size = 'md', di
         borderTop: `1px solid ${accent.text}44`,
       }}>
         {/* left emoji */}
-        <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
+        <span style={{ fontSize: bottomEmoji, lineHeight: 1, flexShrink: 0 }}>{card.categoryEmoji}</span>
         {/* center text */}
-        <span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize, color: accent.text, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+        <span style={{
+          fontFamily: "'Sarabun', sans-serif", fontWeight: 700, fontSize: bottomThSize,
+          color: accent.text, textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+          flex: 1, textAlign: 'center', overflow: 'hidden',
+          textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
+        }}>
           {card.categoryTH}
         </span>
         {/* right emoji */}
-        <span style={{ fontSize: bottomEmoji, lineHeight: 1 }}>{card.categoryEmoji}</span>
+        <span style={{ fontSize: bottomEmoji, lineHeight: 1, flexShrink: 0 }}>{card.categoryEmoji}</span>
       </div>
     </div>
   );
