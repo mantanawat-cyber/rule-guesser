@@ -928,7 +928,8 @@ export default function GameScreen() {
           boxShadow: '0 0 10px rgba(210,150,30,0.25), 0 4px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(220,170,60,0.12)',
           backdropFilter: 'blur(12px)',
           animation: 'rg-flash-drop 0.28s cubic-bezier(0.34,1.4,0.64,1) forwards, rg-flash-pulse 1.8s 0.3s ease-in-out infinite',
-          whiteSpace: 'nowrap',
+          maxWidth: 'calc(100vw - 48px)',
+          textAlign: 'center',
         }}>
           <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🔥</span>
           <span style={{
